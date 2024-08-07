@@ -1,20 +1,26 @@
 package provider
 
 import (
+	"context"
+	awsClients "postservice/infrastructure/aws"
 	"postservice/infrastructure/kafka"
 	"postservice/internal/api"
 	"postservice/internal/bus"
+	database "postservice/internal/db"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/rs/zerolog/log"
 )
 
 type Provider struct {
-	env     string
-	connStr string
+	env string
 }
 
-func NewProvider(env, connStr string) *Provider {
+func NewProvider(env string) *Provider {
 	return &Provider{
-		env:     env,
-		connStr: connStr,
+		env: env,
 	}
 }
 
@@ -41,6 +47,23 @@ func (p *Provider) ProvideApiControllers() []api.Controller {
 	return []api.Controller{}
 }
 
+func (p *Provider) ProvideDb(ctx context.Context) (*database.Database, error) {
+	var cfg aws.Config
+	var err error
+
+	if p.env == "development" {
+		cfg, err = provideDevEnvironmentDbConfig(ctx)
+	} else {
+		cfg, err = provideAwsConfig(ctx)
+	}
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load aws configuration")
+		return nil, err
+	}
+
+	return database.NewDatabase(awsClients.NewDynamodbClient(cfg)), nil
+}
+
 func (p *Provider) kafkaBrokers() []string {
 	if p.env == "development" {
 		return []string{
@@ -52,4 +75,24 @@ func (p *Provider) kafkaBrokers() []string {
 			"172.31.45.255:9092",
 		}
 	}
+}
+
+func provideAwsConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx, config.WithRegion("eu-west-3"))
+}
+
+func provideDevEnvironmentDbConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx,
+		config.WithRegion("localhost"),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				return aws.Endpoint{URL: "http://localhost:8000"}, nil
+			})),
+		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
+			Value: aws.Credentials{
+				AccessKeyID: "abcd", SecretAccessKey: "a1b2c3", SessionToken: "",
+				Source: "Mock credentials used above for local instance",
+			},
+		}),
+	)
 }
