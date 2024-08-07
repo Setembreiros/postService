@@ -2,6 +2,7 @@ package provider
 
 import (
 	"postservice/infrastructure/kafka"
+	"postservice/internal/api"
 	"postservice/internal/bus"
 )
 
@@ -24,6 +25,20 @@ func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {
 	}
 
 	return bus.NewEventBus(kafkaProducer), nil
+}
+
+func (p *Provider) ProvideSubscriptions() *[]bus.EventSubscription {
+	return &[]bus.EventSubscription{
+		{},
+	}
+}
+
+func (p *Provider) ProvideApiEndpoint() *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers())
+}
+
+func (p *Provider) ProvideApiControllers() []api.Controller {
+	return []api.Controller{}
 }
 
 func (p *Provider) kafkaBrokers() []string {
