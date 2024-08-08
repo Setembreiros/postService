@@ -8,6 +8,7 @@ import (
 	"postservice/internal/features/create_post"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
@@ -29,12 +30,21 @@ func setUpHandler(t *testing.T) {
 
 func TestCreatePost(t *testing.T) {
 	setUpHandler(t)
-	data, _ := serializeData("")
+	newPost := &create_post.Post{
+		Title:       "Meu Post",
+		Description: "Este é o meu novo post",
+		CreatedAt:   time.Now(),
+		LastUpdated: time.Now(),
+	}
+	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": "Everything Ok"
+		"content": {
+			"post_id":"postId",
+			"presigned_url":"https://presigned/url"
+		}
 	}`
 
 	controller.CreatePost(ginContext)

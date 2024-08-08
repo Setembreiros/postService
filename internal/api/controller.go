@@ -18,7 +18,6 @@ type response struct {
 
 func SendOKWithResult(c *gin.Context, result any) {
 	var payload response
-
 	payload.Error = false
 	payload.Message = "200 OK"
 	payload.Content = result

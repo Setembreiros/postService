@@ -1,6 +1,7 @@
 package create_post
 
 import (
+	"fmt"
 	"postservice/internal/api"
 
 	"github.com/gin-gonic/gin"
@@ -8,10 +9,18 @@ import (
 )
 
 type CreatePostController struct {
+	service *CreatePostService
+}
+
+type CreatePostResponse struct {
+	PostId       string `json:"post_id"`
+	PresignedUrl string `json:"presigned_url"`
 }
 
 func NewCreatePostController() *CreatePostController {
-	return &CreatePostController{}
+	return &CreatePostController{
+		service: NewCreatePostService(),
+	}
 }
 
 func (controller *CreatePostController) Routes(routerGroup *gin.RouterGroup) {
@@ -20,6 +29,22 @@ func (controller *CreatePostController) Routes(routerGroup *gin.RouterGroup) {
 
 func (controller *CreatePostController) CreatePost(c *gin.Context) {
 	log.Info().Msg("Handling Request POST CreatePost")
+	var post Post
 
-	api.SendOKWithResult(c, "Everything Ok")
+	if err := c.BindJSON(&post); err != nil {
+		log.Error().Stack().Err(err).Msg("Invalid Data")
+		return
+	}
+
+	postId, presignedUrl, err := controller.service.CreatePost(&post)
+	fmt.Println(presignedUrl)
+	if err != nil {
+		api.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	api.SendOKWithResult(c, &CreatePostResponse{
+		PostId:       postId,
+		PresignedUrl: presignedUrl,
+	})
 }
