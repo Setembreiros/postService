@@ -17,9 +17,9 @@ type CreatePostResponse struct {
 	PresignedUrl string `json:"presigned_url"`
 }
 
-func NewCreatePostController() *CreatePostController {
+func NewCreatePostController(repository Repository) *CreatePostController {
 	return &CreatePostController{
-		service: NewCreatePostService(),
+		service: NewCreatePostService(repository),
 	}
 }
 

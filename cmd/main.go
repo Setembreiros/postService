@@ -49,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 	subscriptions := provider.ProvideSubscriptions()
-	apiEnpoint := provider.ProvideApiEndpoint()
+	apiEnpoint := provider.ProvideApiEndpoint(database)
 	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
 	if err != nil {
 		os.Exit(1)

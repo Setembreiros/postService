@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	database "postservice/internal/db"
@@ -76,7 +77,9 @@ func (dc *DynamoDBClient) CreateTable(tableName string, keys *[]database.TableAt
 }
 
 func (dc *DynamoDBClient) InsertData(tableName string, attributes any) error {
+	fmt.Println(attributes)
 	item, err := attributevalue.MarshalMap(attributes)
+	fmt.Println(item)
 	if err != nil {
 		return err
 	}
