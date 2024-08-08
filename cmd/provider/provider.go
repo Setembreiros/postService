@@ -7,6 +7,7 @@ import (
 	"postservice/internal/api"
 	"postservice/internal/bus"
 	database "postservice/internal/db"
+	"postservice/internal/features/create_post"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -50,7 +51,9 @@ func (p *Provider) ProvideApiEndpoint() *api.Api {
 }
 
 func (p *Provider) ProvideApiControllers() []api.Controller {
-	return []api.Controller{}
+	return []api.Controller{
+		create_post.NewCreatePostController(),
+	}
 }
 
 func (p *Provider) ProvideDb(ctx context.Context) (*database.Database, error) {

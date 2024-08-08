@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/rs/zerolog v1.33.0
 )
 
