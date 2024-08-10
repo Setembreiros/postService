@@ -44,6 +44,10 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
+	objectStorage, err := provider.ProvideObjectStorage(ctx)
+	if err != nil {
+		os.Exit(1)
+	}
 	eventBus, err := provider.ProvideEventBus()
 	if err != nil {
 		os.Exit(1)

@@ -35,15 +35,30 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // AddNewPostMetaData mocks base method.
-func (m *MockRepository) AddNewPostMetaData(id string, data *create_post.Post) error {
+func (m *MockRepository) AddNewPostMetaData(data *create_post.Post) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddNewPostMetaData", id, data)
+	ret := m.ctrl.Call(m, "AddNewPostMetaData", data)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddNewPostMetaData indicates an expected call of AddNewPostMetaData.
-func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(id, data interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewPostMetaData", reflect.TypeOf((*MockRepository)(nil).AddNewPostMetaData), id, data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewPostMetaData", reflect.TypeOf((*MockRepository)(nil).AddNewPostMetaData), data)
+}
+
+// GetPresignedUrlForUploadingText mocks base method.
+func (m *MockRepository) GetPresignedUrlForUploadingText(data *create_post.Post) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedUrlForUploadingText", data)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedUrlForUploadingText indicates an expected call of GetPresignedUrlForUploadingText.
+func (mr *MockRepositoryMockRecorder) GetPresignedUrlForUploadingText(data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlForUploadingText", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlForUploadingText), data)
 }

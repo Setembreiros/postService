@@ -8,6 +8,7 @@ import (
 	"postservice/internal/bus"
 	database "postservice/internal/db"
 	"postservice/internal/features/create_post"
+	objectstorage "postservice/internal/objectStorage"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -46,13 +47,13 @@ func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaCon
 	return kafka.NewKafkaConsumer(brokers, eventBus)
 }
 
-func (p *Provider) ProvideApiEndpoint(database *database.Database) *api.Api {
-	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database))
+func (p *Provider) ProvideApiEndpoint(database *database.Database, objectRepository *objectstorage.ObjectStorage) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, objectRepository))
 }
 
-func (p *Provider) ProvideApiControllers(database *database.Database) []api.Controller {
+func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage) []api.Controller {
 	return []api.Controller{
-		create_post.NewCreatePostController(create_post.CreatePostRepository(*database)),
+		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository)),
 	}
 }
 
@@ -61,7 +62,7 @@ func (p *Provider) ProvideDb(ctx context.Context) (*database.Database, error) {
 	var err error
 
 	if p.env == "development" {
-		cfg, err = provideDevEnvironmentDbConfig(ctx)
+		cfg, err = provideDevEnvironmentDbConfig(ctx, "8000")
 	} else {
 		cfg, err = provideAwsConfig(ctx)
 	}
@@ -71,6 +72,23 @@ func (p *Provider) ProvideDb(ctx context.Context) (*database.Database, error) {
 	}
 
 	return database.NewDatabase(awsClients.NewDynamodbClient(cfg)), nil
+}
+
+func (p *Provider) ProvideObjectStorage(ctx context.Context) (*objectstorage.ObjectStorage, error) {
+	var cfg aws.Config
+	var err error
+
+	if p.env == "development" {
+		cfg, err = provideDevEnvironmentDbConfig(ctx, "4566")
+	} else {
+		cfg, err = provideAwsConfig(ctx)
+	}
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load aws configuration")
+		return nil, err
+	}
+
+	return objectstorage.NewObjectStorage(awsClients.NewS3Client(cfg, "artis-bucket")), nil
 }
 
 func (p *Provider) kafkaBrokers() []string {
@@ -90,12 +108,12 @@ func provideAwsConfig(ctx context.Context) (aws.Config, error) {
 	return config.LoadDefaultConfig(ctx, config.WithRegion("eu-west-3"))
 }
 
-func provideDevEnvironmentDbConfig(ctx context.Context) (aws.Config, error) {
+func provideDevEnvironmentDbConfig(ctx context.Context, port string) (aws.Config, error) {
 	return config.LoadDefaultConfig(ctx,
 		config.WithRegion("localhost"),
 		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
 			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{URL: "http://localhost:8000"}, nil
+				return aws.Endpoint{URL: "http://localhost:" + port}, nil
 			})),
 		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{

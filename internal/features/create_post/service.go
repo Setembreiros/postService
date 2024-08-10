@@ -1,8 +1,6 @@
 package create_post
 
 import (
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -11,7 +9,8 @@ import (
 //go:generate mockgen -source=service.go -destination=mock/service.go
 
 type Repository interface {
-	AddNewPostMetaData(id string, data *Post) error
+	AddNewPostMetaData(data *Post) error
+	GetPresignedUrlForUploadingText(data *Post) (string, error)
 }
 
 type CreatePostService struct {
@@ -20,6 +19,7 @@ type CreatePostService struct {
 
 type Post struct {
 	User        string    `json:"username"`
+	Type        string    `json:"type"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -32,30 +32,29 @@ func NewCreatePostService(repository Repository) *CreatePostService {
 	}
 }
 
-func (s *CreatePostService) CreatePost(post *Post) (string, string, error) {
-	postId := generatePostId(post)
-	err := s.savePostMetaData(postId, post)
+func (s *CreatePostService) CreatePost(post *Post) (string, error) {
+	err := s.savePostMetaData(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error saving Post metadata")
-		return "", "", err
+		return "", err
+	}
+	presignedUrl, err := s.generetePreSignedUrl(post)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
+		return "", err
 	}
 
 	log.Info().Msgf("Post %s was created", post.Title)
 
-	return postId, "https://presigned/url", nil
+	return presignedUrl, nil
 }
 
-func generatePostId(post *Post) string {
-	postId := post.User + "-" + post.Title + "-" + strconv.FormatInt(post.CreatedAt.Unix(), 10)
-	return strings.ReplaceAll(strings.ReplaceAll(postId, " ", "_"), "\t", "_")
-}
-
-func (s *CreatePostService) savePostMetaData(id string, post *Post) error {
-	err := s.repository.AddNewPostMetaData(id, post)
+func (s *CreatePostService) savePostMetaData(post *Post) error {
+	err := s.repository.AddNewPostMetaData(post)
 	return err
 }
 
-func (s *CreatePostService) GeneretePresSignedUrl(post *Post) (string, error) {
-	log.Info().Msgf("Post %s was created", post.Title)
-	return "https://presigned/url", nil
+func (s *CreatePostService) generetePreSignedUrl(post *Post) (string, error) {
+	presignedUrl, err := s.repository.GetPresignedUrlForUploadingText(post)
+	return presignedUrl, err
 }

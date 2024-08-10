@@ -28,17 +28,17 @@ func TestCreatePostWithService(t *testing.T) {
 	setUpService(t)
 	newPost := &create_post.Post{
 		User:        "username1",
+		Type:        "Text",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
 		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
-	expectedPostId := "username1-Meu_Post-1723153880"
-	serviceRepository.EXPECT().AddNewPostMetaData(expectedPostId, newPost).Return(nil)
+	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
+	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost).Return("https://presigned/url", nil)
 
-	postId, presignedUrl, err := createPostService.CreatePost(newPost)
+	presignedUrl, err := createPostService.CreatePost(newPost)
 
-	assert.Equal(t, postId, expectedPostId)
 	assert.Equal(t, presignedUrl, "https://presigned/url")
 	assert.Nil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Post Meu Post was created")
@@ -47,17 +47,17 @@ func TestCreatePostWithService(t *testing.T) {
 func TestErrorOnCreatePostWithService(t *testing.T) {
 	setUpService(t)
 	newPost := &create_post.Post{
+		User:        "username1",
 		Title:       "Meu Post",
+		Type:        "Text",
 		Description: "Este é o meu novo post",
 		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
-	expectedPostId := "username1-Meu_Post-1723153880"
-	serviceRepository.EXPECT().AddNewPostMetaData(expectedPostId, newPost).Return(errors.New("some error"))
+	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
 
-	postId, presignedUrl, err := createPostService.CreatePost(newPost)
+	presignedUrl, err := createPostService.CreatePost(newPost)
 
-	assert.Empty(t, postId)
 	assert.Empty(t, presignedUrl)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")

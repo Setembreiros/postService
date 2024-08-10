@@ -3,6 +3,7 @@ package create_post_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"postservice/internal/features/create_post"
@@ -37,6 +38,7 @@ func TestCreatePost(t *testing.T) {
 	setUpHandler(t)
 	newPost := &create_post.Post{
 		User:        "username1",
+		Type:        "Text",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
 		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
@@ -44,20 +46,46 @@ func TestCreatePost(t *testing.T) {
 	}
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
-	expectedPostId := "username1-Meu_Post-1723153880"
-	controllerRepository.EXPECT().AddNewPostMetaData(expectedPostId, newPost)
+	expectedPresignedUrl := "https://presigned/url"
+	controllerRepository.EXPECT().AddNewPostMetaData(newPost)
+	controllerRepository.EXPECT().GetPresignedUrlForUploadingText(newPost).Return(expectedPresignedUrl, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
-			"post_id":"` + expectedPostId + `",
-			"presigned_url":"https://presigned/url"
+			"presigned_url":"` + expectedPresignedUrl + `"
 		}
 	}`
 
 	controller.CreatePost(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 200)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestInternalServerErrorOnCreatePost(t *testing.T) {
+	setUpHandler(t)
+	newPost := &create_post.Post{
+		User:        "username1",
+		Type:        "Text",
+		Title:       "Meu Post",
+		Description: "Este é o meu novo post",
+		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+	}
+	data, _ := serializeData(newPost)
+	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
+	expectedError := errors.New("some error")
+	controllerRepository.EXPECT().AddNewPostMetaData(newPost).Return(expectedError)
+	expectedBodyResponse := `{
+		"error": true,
+		"message": "` + expectedError.Error() + `",
+		"content":null
+	}`
+
+	controller.CreatePost(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 500)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
