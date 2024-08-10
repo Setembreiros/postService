@@ -1,7 +1,6 @@
 package create_post
 
 import (
-	"fmt"
 	"postservice/internal/api"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +35,6 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 	}
 
 	presignedUrl, err := controller.service.CreatePost(&post)
-	fmt.Println(presignedUrl)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return

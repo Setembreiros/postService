@@ -1,6 +1,7 @@
 package create_post
 
 import (
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -32,29 +33,53 @@ func NewCreatePostService(repository Repository) *CreatePostService {
 	}
 }
 
+var tasks sync.WaitGroup
+
 func (s *CreatePostService) CreatePost(post *Post) (string, error) {
-	err := s.savePostMetaData(post)
+	chError := make(chan error, 2)
+	chResult := make(chan string, 1)
+	defer close(chError)
+	defer close(chResult)
+
+	taskAmount := 2
+	tasks.Add(taskAmount)
+	go s.savePostMetaData(post, chError)
+	go s.generetePreSignedUrl(post, chResult, chError)
+	tasks.Wait()
+
+	for i := 0; i < taskAmount; i++ {
+		err := <-chError
+		if err != nil {
+			return "", err
+		}
+	}
+
+	result := <-chResult
+	log.Info().Msgf("Post %s was created", post.Title)
+	return result, nil
+}
+
+func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
+	defer tasks.Done()
+
+	err := s.repository.AddNewPostMetaData(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error saving Post metadata")
-		return "", err
+		chError <- err
 	}
-	presignedUrl, err := s.generetePreSignedUrl(post)
+
+	chError <- nil
+}
+
+func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan string, chError chan<- error) {
+	defer tasks.Done()
+
+	presignedUrl, err := s.repository.GetPresignedUrlForUploadingText(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
-		return "", err
+		chError <- err
 	}
 
-	log.Info().Msgf("Post %s was created", post.Title)
-
-	return presignedUrl, nil
-}
-
-func (s *CreatePostService) savePostMetaData(post *Post) error {
-	err := s.repository.AddNewPostMetaData(post)
-	return err
-}
-
-func (s *CreatePostService) generetePreSignedUrl(post *Post) (string, error) {
-	presignedUrl, err := s.repository.GetPresignedUrlForUploadingText(post)
-	return presignedUrl, err
+	chError <- nil
+	chResult <- presignedUrl
 }
