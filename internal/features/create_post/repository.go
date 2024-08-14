@@ -1,10 +1,12 @@
 package create_post
 
 import (
+	"fmt"
 	database "postservice/internal/db"
 	objectstorage "postservice/internal/objectStorage"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CreatePostRepository struct {
@@ -24,35 +26,49 @@ type PostKey struct {
 }
 
 type PostMetadata struct {
-	PostId   string `json:"post_id"`
-	Metadata *Post  `json:"metadata"`
+	PostId      string    `json:"post_id"`
+	User        string    `json:"username"`
+	Type        string    `json:"type"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	LastUpdated time.Time `json:"last_updated"`
 }
 
-func (r CreatePostRepository) AddNewPostMetaData(post *Post) error {
+func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	data := &PostMetadata{
-		PostId:   generatePostId(post),
-		Metadata: post,
+		PostId:      generatePostId(post),
+		User:        post.User,
+		Type:        post.Type,
+		Title:       post.Title,
+		Description: post.Description,
+		CreatedAt:   post.CreatedAt,
+		LastUpdated: post.LastUpdated,
 	}
 	return r.dataRepository.Client.InsertData("Posts", data)
 }
 
-func (r CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (string, error) {
+func (r *CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (string, error) {
 	key := post.User + "/" + post.Type + "/" + generatePostId(post)
 	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 }
 
-func (r CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
+func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
 	postKey := &PostKey{
 		PostId: postId,
 	}
 	var post Post
 	err := r.dataRepository.Client.GetData("Posts", postKey, &post)
 
+	fmt.Println(post)
 	return &post, err
 }
 
-func (r CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
-	return r.dataRepository.Client.RemoveData("Posts", postId)
+func (r *CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
+	postKey := &PostKey{
+		PostId: postId,
+	}
+	return r.dataRepository.Client.RemoveData("Posts", postKey)
 }
 
 func generatePostId(post *Post) string {

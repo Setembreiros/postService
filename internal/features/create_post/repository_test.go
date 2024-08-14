@@ -35,8 +35,13 @@ func TestAddNewPostMetaDataInRepository(t *testing.T) {
 	}
 	expectedPostId := "username1-Meu_Post-1723153880"
 	data := &create_post.PostMetadata{
-		PostId:   expectedPostId,
-		Metadata: newPost,
+		PostId:      expectedPostId,
+		User:        newPost.User,
+		Type:        newPost.Type,
+		Title:       newPost.Title,
+		Description: newPost.Description,
+		CreatedAt:   newPost.CreatedAt,
+		LastUpdated: newPost.LastUpdated,
 	}
 	dbClient.EXPECT().InsertData("Posts", data)
 
@@ -73,8 +78,11 @@ func TestGetPostMetadata(t *testing.T) {
 
 func TestRemoveUnconfirmedPostMetaDataInRepository(t *testing.T) {
 	setUp(t)
-	expectedPostId := "username1-Meu_Post-1723153880"
-	dbClient.EXPECT().RemoveData("Posts", expectedPostId)
+	postId := "username1-Meu_Post-1723153880"
+	expectedKey := &create_post.PostKey{
+		PostId: postId,
+	}
+	dbClient.EXPECT().RemoveData("Posts", expectedKey)
 
-	createPostRepository.RemoveUnconfirmedPost(expectedPostId)
+	createPostRepository.RemoveUnconfirmedPost(postId)
 }
