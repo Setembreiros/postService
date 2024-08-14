@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"postservice/internal/bus"
 	"postservice/internal/features/create_post"
 	mock_create_post "postservice/internal/features/create_post/mock"
 	"strings"
@@ -20,6 +21,7 @@ import (
 
 var controllerLoggerOutput bytes.Buffer
 var controllerRepository *mock_create_post.MockRepository
+var controllerBus *bus.EventBus
 var controller *create_post.CreatePostController
 var apiResponse *httptest.ResponseRecorder
 var ginContext *gin.Context
@@ -27,8 +29,9 @@ var ginContext *gin.Context
 func setUpHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	controllerRepository = mock_create_post.NewMockRepository(ctrl)
+	controllerBus = &bus.EventBus{}
 	log.Logger = log.Output(&controllerLoggerOutput)
-	controller = create_post.NewCreatePostController(controllerRepository)
+	controller = create_post.NewCreatePostController(controllerRepository, controllerBus)
 	gin.SetMode(gin.TestMode)
 	apiResponse = httptest.NewRecorder()
 	ginContext, _ = gin.CreateTestContext(apiResponse)

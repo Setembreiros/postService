@@ -59,6 +59,18 @@ func TestGetPresignedUrlForUploadingText(t *testing.T) {
 	createPostRepository.GetPresignedUrlForUploadingText(newPost)
 }
 
+func TestGetPostMetadata(t *testing.T) {
+	setUp(t)
+	var post create_post.Post
+	postId := "username1-Meu_Post-1723153880"
+	expectedKey := &create_post.PostKey{
+		PostId: postId,
+	}
+	dbClient.EXPECT().GetData("Posts", expectedKey, &post)
+
+	createPostRepository.GetPostMetadata(postId)
+}
+
 func TestRemoveUnconfirmedPostMetaDataInRepository(t *testing.T) {
 	setUp(t)
 	expectedPostId := "username1-Meu_Post-1723153880"

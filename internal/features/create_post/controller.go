@@ -2,6 +2,7 @@ package create_post
 
 import (
 	"postservice/internal/api"
+	"postservice/internal/bus"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -15,9 +16,9 @@ type CreatePostResponse struct {
 	PresignedUrl string `json:"presigned_url"`
 }
 
-func NewCreatePostController(repository Repository) *CreatePostController {
+func NewCreatePostController(repository Repository, bus *bus.EventBus) *CreatePostController {
 	return &CreatePostController{
-		service: NewCreatePostService(repository),
+		service: NewCreatePostService(repository, bus),
 	}
 }
 

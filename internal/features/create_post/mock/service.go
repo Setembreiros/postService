@@ -48,6 +48,21 @@ func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(data interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewPostMetaData", reflect.TypeOf((*MockRepository)(nil).AddNewPostMetaData), data)
 }
 
+// GetPostMetadata mocks base method.
+func (m *MockRepository) GetPostMetadata(postId string) (*create_post.Post, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPostMetadata", postId)
+	ret0, _ := ret[0].(*create_post.Post)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPostMetadata indicates an expected call of GetPostMetadata.
+func (mr *MockRepositoryMockRecorder) GetPostMetadata(postId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostMetadata", reflect.TypeOf((*MockRepository)(nil).GetPostMetadata), postId)
+}
+
 // GetPresignedUrlForUploadingText mocks base method.
 func (m *MockRepository) GetPresignedUrlForUploadingText(data *create_post.Post) (string, error) {
 	m.ctrl.T.Helper()

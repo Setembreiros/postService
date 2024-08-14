@@ -1,6 +1,7 @@
 package create_post
 
 import (
+	"postservice/internal/bus"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -11,11 +12,13 @@ import (
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
 	GetPresignedUrlForUploadingText(data *Post) (string, error)
+	GetPostMetadata(postId string) (*Post, error)
 	RemoveUnconfirmedPost(postId string) error
 }
 
 type CreatePostService struct {
 	repository Repository
+	bus        *bus.EventBus
 }
 
 type Post struct {
@@ -32,9 +35,15 @@ type ConfirmedCreatedPost struct {
 	PostId      string `json:"post_id"`
 }
 
-func NewCreatePostService(repository Repository) *CreatePostService {
+type PostWasCreatedEvent struct {
+	PostId   string `json:"post_id"`
+	Metadata *Post  `json:"post"`
+}
+
+func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostService {
 	return &CreatePostService{
 		repository: repository,
+		bus:        bus,
 	}
 }
 
@@ -58,17 +67,29 @@ func (s *CreatePostService) CreatePost(post *Post) (string, error) {
 	return result, nil
 }
 
-func (s *CreatePostService) ConfirmCreatedPost(post *ConfirmedCreatedPost) error {
-	if post.IsConfirmed {
-		log.Info().Msgf("Created Post %s was confirmed", post.PostId)
-	} else {
-		err := s.repository.RemoveUnconfirmedPost(post.PostId)
+func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error {
+	if !confirmPostData.IsConfirmed {
+		err := s.rollBackUnconfirmedPost(confirmPostData.PostId)
 		if err != nil {
-			log.Error().Stack().Err(err).Msg("Error removing Post metadata")
 			return err
 		}
-		log.Info().Msgf("Created Post %s failed", post.PostId)
+
+		return nil
 	}
+
+	post, err := s.repository.GetPostMetadata(confirmPostData.PostId)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Error retrieving Post %s metadata", confirmPostData.PostId)
+		return err
+	}
+
+	err = s.publishPostWasCreatedEvent(confirmPostData.PostId, post)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msgf("Created Post %s was confirmed", confirmPostData.PostId)
+
 	return nil
 }
 
@@ -91,4 +112,29 @@ func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan strin
 
 	chError <- nil
 	chResult <- presignedUrl
+}
+
+func (s *CreatePostService) publishPostWasCreatedEvent(postId string, metadata *Post) error {
+	event := &PostWasCreatedEvent{
+		PostId:   postId,
+		Metadata: metadata,
+	}
+	err := s.bus.Publish("PostWasCreatedEvent", event)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Publishing PostWasCreatedEvent failed")
+		return err
+	}
+
+	return nil
+}
+
+func (s *CreatePostService) rollBackUnconfirmedPost(postId string) error {
+	err := s.repository.RemoveUnconfirmedPost(postId)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Error removing Post metadata")
+		return err
+	}
+	log.Info().Msgf("Created Post %s failed", postId)
+
+	return nil
 }

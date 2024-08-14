@@ -19,6 +19,10 @@ func NewCreatePostRepository(dataRepository *database.Database, objectRepository
 	}
 }
 
+type PostKey struct {
+	PostId string
+}
+
 type PostMetadata struct {
 	PostId   string `json:"post_id"`
 	Metadata *Post  `json:"metadata"`
@@ -35,6 +39,16 @@ func (r CreatePostRepository) AddNewPostMetaData(post *Post) error {
 func (r CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (string, error) {
 	key := post.User + "/" + post.Type + "/" + generatePostId(post)
 	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
+}
+
+func (r CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
+	postKey := &PostKey{
+		PostId: postId,
+	}
+	var post Post
+	err := r.dataRepository.Client.GetData("Posts", postKey, &post)
+
+	return &post, err
 }
 
 func (r CreatePostRepository) RemoveUnconfirmedPost(postId string) error {

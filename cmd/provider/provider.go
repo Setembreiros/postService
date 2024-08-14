@@ -47,13 +47,13 @@ func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaCon
 	return kafka.NewKafkaConsumer(brokers, eventBus)
 }
 
-func (p *Provider) ProvideApiEndpoint(database *database.Database, objectRepository *objectstorage.ObjectStorage) *api.Api {
-	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, objectRepository))
+func (p *Provider) ProvideApiEndpoint(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, objectRepository, bus))
 }
 
-func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage) []api.Controller {
+func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
-		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository)),
+		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository), bus),
 	}
 }
 
