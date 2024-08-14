@@ -62,3 +62,17 @@ func (mr *MockRepositoryMockRecorder) GetPresignedUrlForUploadingText(data inter
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlForUploadingText", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlForUploadingText), data)
 }
+
+// RemoveUnconfirmedPost mocks base method.
+func (m *MockRepository) RemoveUnconfirmedPost(postId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUnconfirmedPost", postId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUnconfirmedPost indicates an expected call of RemoveUnconfirmedPost.
+func (mr *MockRepositoryMockRecorder) RemoveUnconfirmedPost(postId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUnconfirmedPost", reflect.TypeOf((*MockRepository)(nil).RemoveUnconfirmedPost), postId)
+}

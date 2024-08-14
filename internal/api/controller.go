@@ -16,6 +16,14 @@ type response struct {
 	Content any    `json:"content"`
 }
 
+func SendOK(c *gin.Context) {
+	var payload response
+	payload.Error = false
+	payload.Message = "200 OK"
+
+	c.IndentedJSON(http.StatusOK, payload)
+}
+
 func SendOKWithResult(c *gin.Context, result any) {
 	var payload response
 	payload.Error = false

@@ -55,10 +55,39 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
+	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost)
 
 	presignedUrl, err := createPostService.CreatePost(newPost)
 
 	assert.Empty(t, presignedUrl)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")
+}
+
+func TestConfirmCreatedPostWithServiceWhenIsNotConfirmed(t *testing.T) {
+	setUpService(t)
+	notConfirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: false,
+		PostId:      "postId",
+	}
+	serviceRepository.EXPECT().RemoveUnconfirmedPost(notConfirmedPost.PostId).Return(nil)
+
+	err := createPostService.ConfirmCreatedPost(notConfirmedPost)
+
+	assert.Nil(t, err)
+	assert.Contains(t, serviceLoggerOutput.String(), "Created Post postId failed")
+}
+
+func TestErrorOnConfirmCreatedPostWithServiceWhenIsNotConfirmed(t *testing.T) {
+	setUpService(t)
+	notConfirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: false,
+		PostId:      "postId",
+	}
+	serviceRepository.EXPECT().RemoveUnconfirmedPost(notConfirmedPost.PostId).Return(errors.New("some error"))
+
+	err := createPostService.ConfirmCreatedPost(notConfirmedPost)
+
+	assert.NotNil(t, err)
+	assert.Contains(t, serviceLoggerOutput.String(), "Error removing Post metadata")
 }

@@ -77,6 +77,20 @@ func (mr *MockDatabaseClientMockRecorder) InsertData(tableName, attributes inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertData", reflect.TypeOf((*MockDatabaseClient)(nil).InsertData), tableName, attributes)
 }
 
+// RemoveData mocks base method.
+func (m *MockDatabaseClient) RemoveData(tableName string, key any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveData", tableName, key)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveData indicates an expected call of RemoveData.
+func (mr *MockDatabaseClientMockRecorder) RemoveData(tableName, key interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveData", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveData), tableName, key)
+}
+
 // TableExists mocks base method.
 func (m *MockDatabaseClient) TableExists(tableName string) bool {
 	m.ctrl.T.Helper()

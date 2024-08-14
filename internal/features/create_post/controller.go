@@ -23,6 +23,7 @@ func NewCreatePostController(repository Repository) *CreatePostController {
 
 func (controller *CreatePostController) Routes(routerGroup *gin.RouterGroup) {
 	routerGroup.POST("/post", controller.CreatePost)
+	routerGroup.PUT("/confirm-created-post", controller.ConfirmCreatedPost)
 }
 
 func (controller *CreatePostController) CreatePost(c *gin.Context) {
@@ -43,4 +44,22 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 	api.SendOKWithResult(c, &CreatePostResponse{
 		PresignedUrl: presignedUrl,
 	})
+}
+
+func (controller *CreatePostController) ConfirmCreatedPost(c *gin.Context) {
+	log.Info().Msg("Handling Request PUT ConfirmCreatedPost")
+
+	var post ConfirmedCreatedPost
+	if err := c.BindJSON(&post); err != nil {
+		log.Error().Stack().Err(err).Msg("Invalid Data")
+		return
+	}
+
+	err := controller.service.ConfirmCreatedPost(&post)
+	if err != nil {
+		api.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	api.SendOK(c)
 }

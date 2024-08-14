@@ -85,7 +85,7 @@ func (dc *DynamoDBClient) InsertData(tableName string, attributes any) error {
 		TableName: aws.String(tableName), Item: item,
 	})
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Couldn't put item to table")
+		log.Error().Stack().Err(err).Msgf("Couldn't put item %v from table %s", item, tableName)
 		return err
 	}
 
@@ -107,13 +107,30 @@ func (dc *DynamoDBClient) GetData(tableName string, key any, result any) error {
 	}
 	if response.Item == nil {
 		err = database.NewNotFoundError(tableName, key)
-		log.Error().Stack().Err(err).Msg("Item was not found")
+		log.Error().Stack().Err(err).Msgf("Item %s was not found", key)
 		return err
 	}
 
 	err = attributevalue.UnmarshalMap(response.Item, &result)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Couldn't unmarshal response")
+		return err
+	}
+
+	return nil
+}
+
+func (dc *DynamoDBClient) RemoveData(tableName string, key any) error {
+	k, err := attributevalue.MarshalMap(key)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't map %v key to AttributeValues", key)
+	}
+
+	_, err = dc.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String(tableName), Key: k,
+	})
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't remove item %v from table %s", key, tableName)
 		return err
 	}
 

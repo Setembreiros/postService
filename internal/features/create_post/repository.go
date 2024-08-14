@@ -37,6 +37,10 @@ func (r CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (strin
 	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 }
 
+func (r CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
+	return r.dataRepository.Client.RemoveData("Posts", postId)
+}
+
 func generatePostId(post *Post) string {
 	postId := post.User + "-" + post.Title + "-" + strconv.FormatInt(post.CreatedAt.Unix(), 10)
 	return strings.ReplaceAll(strings.ReplaceAll(postId, " ", "_"), "\t", "_")

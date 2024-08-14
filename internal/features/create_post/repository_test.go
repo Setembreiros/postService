@@ -58,3 +58,11 @@ func TestGetPresignedUrlForUploadingText(t *testing.T) {
 
 	createPostRepository.GetPresignedUrlForUploadingText(newPost)
 }
+
+func TestRemoveUnconfirmedPostMetaDataInRepository(t *testing.T) {
+	setUp(t)
+	expectedPostId := "username1-Meu_Post-1723153880"
+	dbClient.EXPECT().RemoveData("Posts", expectedPostId)
+
+	createPostRepository.RemoveUnconfirmedPost(expectedPostId)
+}

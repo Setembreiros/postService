@@ -77,6 +77,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
 	controllerRepository.EXPECT().AddNewPostMetaData(newPost).Return(expectedError)
+	controllerRepository.EXPECT().GetPresignedUrlForUploadingText(newPost)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
@@ -86,6 +87,27 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	controller.CreatePost(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 500)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestConfirmCreatedPostWhenIsNotConfirmed(t *testing.T) {
+	setUpHandler(t)
+	notConfirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: false,
+		PostId:      "postId",
+	}
+	data, _ := serializeData(notConfirmedPost)
+	ginContext.Request = httptest.NewRequest(http.MethodPut, "/confirm-created-post", bytes.NewBuffer(data))
+	controllerRepository.EXPECT().RemoveUnconfirmedPost(notConfirmedPost.PostId)
+	expectedBodyResponse := `{
+		"error": false,
+		"message": "200 OK",
+		"content": null
+	}`
+
+	controller.ConfirmCreatedPost(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 

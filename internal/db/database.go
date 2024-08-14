@@ -20,6 +20,7 @@ type DatabaseClient interface {
 	CreateTable(tableName string, keys *[]TableAttributes, ctx context.Context) error
 	InsertData(tableName string, attributes any) error
 	GetData(tableName string, key any, result any) error
+	RemoveData(tableName string, key any) error
 }
 
 func NewDatabase(client DatabaseClient) *Database {

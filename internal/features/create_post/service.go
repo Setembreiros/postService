@@ -11,6 +11,7 @@ import (
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
 	GetPresignedUrlForUploadingText(data *Post) (string, error)
+	RemoveUnconfirmedPost(postId string) error
 }
 
 type CreatePostService struct {
@@ -24,6 +25,11 @@ type Post struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	LastUpdated time.Time `json:"last_updated"`
+}
+
+type ConfirmedCreatedPost struct {
+	IsConfirmed bool   `json:"is_confirmed"`
+	PostId      string `json:"post_id"`
 }
 
 func NewCreatePostService(repository Repository) *CreatePostService {
@@ -50,6 +56,20 @@ func (s *CreatePostService) CreatePost(post *Post) (string, error) {
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
 	return result, nil
+}
+
+func (s *CreatePostService) ConfirmCreatedPost(post *ConfirmedCreatedPost) error {
+	if post.IsConfirmed {
+		log.Info().Msgf("Created Post %s was confirmed", post.PostId)
+	} else {
+		err := s.repository.RemoveUnconfirmedPost(post.PostId)
+		if err != nil {
+			log.Error().Stack().Err(err).Msg("Error removing Post metadata")
+			return err
+		}
+		log.Info().Msgf("Created Post %s failed", post.PostId)
+	}
+	return nil
 }
 
 func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
