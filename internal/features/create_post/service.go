@@ -37,7 +37,7 @@ type ConfirmedCreatedPost struct {
 
 type PostWasCreatedEvent struct {
 	PostId   string `json:"post_id"`
-	Metadata *Post  `json:"post"`
+	Metadata *Post  `json:"metadata"`
 }
 
 func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostService {
