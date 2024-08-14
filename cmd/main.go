@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"postservice/cmd/provider"
-	"postservice/infrastructure/kafka"
 	"postservice/internal/api"
 	"postservice/internal/bus"
 	database "postservice/internal/db"
@@ -54,13 +53,9 @@ func main() {
 	}
 	subscriptions := provider.ProvideSubscriptions()
 	apiEnpoint := provider.ProvideApiEndpoint(database, objectStorage, eventBus)
-	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
-	if err != nil {
-		os.Exit(1)
-	}
 
 	app.runConfigurationTasks(database, subscriptions, eventBus)
-	app.runServerTasks(kafkaConsumer, apiEnpoint)
+	app.runServerTasks(apiEnpoint)
 }
 
 func (app *app) configuringLog() {
@@ -82,9 +77,8 @@ func (app *app) runConfigurationTasks(database *database.Database, subscriptions
 	app.configuringTasks.Wait()
 }
 
-func (app *app) runServerTasks(kafkaConsumer *kafka.KafkaConsumer, apiEnpoint *api.Api) {
-	app.runningTasks.Add(2)
-	go app.initKafkaConsumption(kafkaConsumer)
+func (app *app) runServerTasks(apiEnpoint *api.Api) {
+	app.runningTasks.Add(1)
 	go app.runApiEndpoint(apiEnpoint)
 
 	blockForever()
@@ -113,16 +107,6 @@ func (app *app) subcribeEvents(subscriptions *[]bus.EventSubscription, eventBus 
 	}
 
 	log.Info().Msg("All events subscribed")
-}
-
-func (app *app) initKafkaConsumption(kafkaConsumer *kafka.KafkaConsumer) {
-	defer app.runningTasks.Done()
-
-	err := kafkaConsumer.InitConsumption(app.ctx)
-	if err != nil {
-		log.Panic().Err(err).Msg("Kafka Consumption failed")
-	}
-	log.Info().Msg("Kafka Consumer Group stopped")
 }
 
 func (app *app) runApiEndpoint(apiEnpoint *api.Api) {

@@ -41,12 +41,6 @@ func (p *Provider) ProvideSubscriptions() *[]bus.EventSubscription {
 	}
 }
 
-func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaConsumer, error) {
-	brokers := p.kafkaBrokers()
-
-	return kafka.NewKafkaConsumer(brokers, eventBus)
-}
-
 func (p *Provider) ProvideApiEndpoint(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) *api.Api {
 	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, objectRepository, bus))
 }
