@@ -53,12 +53,13 @@ func TestGetPresignedUrlForUploadingText(t *testing.T) {
 	newPost := &create_post.Post{
 		User:        "username1",
 		Type:        "Text",
+		FileType:    "jpg",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
 		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
-	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
+	expectedKey := "username1/Text/username1-Meu_Post-1723153880.jpg"
 	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
 
 	createPostRepository.GetPresignedUrlForUploadingText(newPost)

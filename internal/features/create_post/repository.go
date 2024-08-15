@@ -29,6 +29,7 @@ type PostMetadata struct {
 	PostId      string    `json:"post_id"`
 	User        string    `json:"username"`
 	Type        string    `json:"type"`
+	FileType    string    `json:"file_type"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -40,6 +41,7 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 		PostId:      generatePostId(post),
 		User:        post.User,
 		Type:        post.Type,
+		FileType:    post.FileType,
 		Title:       post.Title,
 		Description: post.Description,
 		CreatedAt:   post.CreatedAt,
@@ -49,7 +51,7 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 }
 
 func (r *CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (string, error) {
-	key := post.User + "/" + post.Type + "/" + generatePostId(post)
+	key := post.User + "/" + post.Type + "/" + generatePostId(post) + "." + post.FileType
 	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 }
 

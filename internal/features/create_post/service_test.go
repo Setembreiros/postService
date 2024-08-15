@@ -44,9 +44,10 @@ func TestCreatePostWithService(t *testing.T) {
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
 	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost).Return("https://presigned/url", nil)
 
-	presignedUrl, err := createPostService.CreatePost(newPost)
+	postId, presignedUrl, err := createPostService.CreatePost(newPost)
 
-	assert.Equal(t, presignedUrl, "https://presigned/url")
+	assert.Equal(t, "username1-Meu_Post-1723153880", postId)
+	assert.Equal(t, "https://presigned/url", presignedUrl)
 	assert.Nil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Post Meu Post was created")
 }
@@ -64,8 +65,9 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
 	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost)
 
-	presignedUrl, err := createPostService.CreatePost(newPost)
+	postId, presignedUrl, err := createPostService.CreatePost(newPost)
 
+	assert.Empty(t, postId)
 	assert.Empty(t, presignedUrl)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")

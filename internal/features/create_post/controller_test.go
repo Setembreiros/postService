@@ -42,6 +42,7 @@ func TestCreatePost(t *testing.T) {
 	newPost := &create_post.Post{
 		User:        "username1",
 		Type:        "Text",
+		FileType:    "jpg",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
 		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
@@ -56,6 +57,7 @@ func TestCreatePost(t *testing.T) {
 		"error": false,
 		"message": "200 OK",
 		"content": {
+			"post_id": "username1-Meu_Post-1723153880",
 			"presigned_url":"` + expectedPresignedUrl + `"
 		}
 	}`

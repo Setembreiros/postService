@@ -24,6 +24,7 @@ type CreatePostService struct {
 type Post struct {
 	User        string    `json:"username"`
 	Type        string    `json:"type"`
+	FileType    string    `json:"file_type"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -47,7 +48,7 @@ func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostS
 	}
 }
 
-func (s *CreatePostService) CreatePost(post *Post) (string, error) {
+func (s *CreatePostService) CreatePost(post *Post) (string, string, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan string, 1)
 
@@ -58,13 +59,13 @@ func (s *CreatePostService) CreatePost(post *Post) (string, error) {
 	for i := 0; i < numberOfTasks; i++ {
 		err := <-chError
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
-	return result, nil
+	return generatePostId(post), result, nil
 }
 
 func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error {

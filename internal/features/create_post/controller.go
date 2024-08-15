@@ -13,6 +13,7 @@ type CreatePostController struct {
 }
 
 type CreatePostResponse struct {
+	PostId       string `json:"post_id"`
 	PresignedUrl string `json:"presigned_url"`
 }
 
@@ -36,13 +37,14 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	presignedUrl, err := controller.service.CreatePost(&post)
+	postId, presignedUrl, err := controller.service.CreatePost(&post)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	api.SendOKWithResult(c, &CreatePostResponse{
+		PostId:       postId,
 		PresignedUrl: presignedUrl,
 	})
 }
