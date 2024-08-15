@@ -63,19 +63,19 @@ func (mr *MockRepositoryMockRecorder) GetPostMetadata(postId interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostMetadata", reflect.TypeOf((*MockRepository)(nil).GetPostMetadata), postId)
 }
 
-// GetPresignedUrlForUploadingText mocks base method.
-func (m *MockRepository) GetPresignedUrlForUploadingText(data *create_post.Post) (string, error) {
+// GetPresignedUrlForUploading mocks base method.
+func (m *MockRepository) GetPresignedUrlForUploading(data *create_post.Post) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPresignedUrlForUploadingText", data)
+	ret := m.ctrl.Call(m, "GetPresignedUrlForUploading", data)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPresignedUrlForUploadingText indicates an expected call of GetPresignedUrlForUploadingText.
-func (mr *MockRepositoryMockRecorder) GetPresignedUrlForUploadingText(data interface{}) *gomock.Call {
+// GetPresignedUrlForUploading indicates an expected call of GetPresignedUrlForUploading.
+func (mr *MockRepositoryMockRecorder) GetPresignedUrlForUploading(data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlForUploadingText", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlForUploadingText), data)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlForUploading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlForUploading), data)
 }
 
 // RemoveUnconfirmedPost mocks base method.
