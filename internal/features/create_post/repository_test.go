@@ -48,7 +48,7 @@ func TestAddNewPostMetaDataInRepository(t *testing.T) {
 	createPostRepository.AddNewPostMetaData(newPost)
 }
 
-func TestGetPresignedUrlForUploadingText(t *testing.T) {
+func TestGetPresignedUrlForUploading(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
 		User:        "username1",
@@ -62,7 +62,7 @@ func TestGetPresignedUrlForUploadingText(t *testing.T) {
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880.jpg"
 	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
 
-	createPostRepository.GetPresignedUrlForUploadingText(newPost)
+	createPostRepository.GetPresignedUrlForUploading(newPost)
 }
 
 func TestGetPostMetadata(t *testing.T) {

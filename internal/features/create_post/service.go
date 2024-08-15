@@ -11,7 +11,7 @@ import (
 
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
-	GetPresignedUrlForUploadingText(data *Post) (string, error)
+	GetPresignedUrlForUploading(data *Post) (string, error)
 	GetPostMetadata(postId string) (*Post, error)
 	RemoveUnconfirmedPost(postId string) error
 }
@@ -105,7 +105,7 @@ func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
 }
 
 func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan string, chError chan<- error) {
-	presignedUrl, err := s.repository.GetPresignedUrlForUploadingText(post)
+	presignedUrl, err := s.repository.GetPresignedUrlForUploading(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
 		chError <- err

@@ -52,7 +52,7 @@ func TestCreatePost(t *testing.T) {
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedPresignedUrl := "https://presigned/url"
 	controllerRepository.EXPECT().AddNewPostMetaData(newPost)
-	controllerRepository.EXPECT().GetPresignedUrlForUploadingText(newPost).Return(expectedPresignedUrl, nil)
+	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return(expectedPresignedUrl, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -82,7 +82,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
 	controllerRepository.EXPECT().AddNewPostMetaData(newPost).Return(expectedError)
-	controllerRepository.EXPECT().GetPresignedUrlForUploadingText(newPost)
+	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
