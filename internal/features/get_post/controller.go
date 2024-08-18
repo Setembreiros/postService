@@ -1,9 +1,7 @@
 package get_post
 
 import (
-	"errors"
 	"postservice/internal/api"
-	database "postservice/internal/db"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -30,13 +28,7 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 
 	presignedUrls, err := controller.service.GetUserPosts(username)
 	if err != nil {
-		var notFoundError *database.NotFoundError
-		if errors.As(err, &notFoundError) {
-			message := "User not found for username " + username
-			api.SendNotFound(c, message)
-		} else {
-			api.SendInternalServerError(c, err.Error())
-		}
+		api.SendInternalServerError(c, err.Error())
 		return
 	}
 

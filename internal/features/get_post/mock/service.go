@@ -5,7 +5,6 @@
 package mock_get_post
 
 import (
-	get_post "postservice/internal/features/get_post"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,31 +34,16 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetPresignedUrlsForDownloading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForDownloading(data []*get_post.Post) ([]string, error) {
+func (m *MockRepository) GetPresignedUrlsForDownloading(username string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", data)
+	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", username)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPresignedUrlsForDownloading indicates an expected call of GetPresignedUrlsForDownloading.
-func (mr *MockRepositoryMockRecorder) GetPresignedUrlsForDownloading(data interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetPresignedUrlsForDownloading(username interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlsForDownloading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlsForDownloading), data)
-}
-
-// GetUserPostMetadatas mocks base method.
-func (m *MockRepository) GetUserPostMetadatas(username string) ([]*get_post.Post, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserPostMetadatas", username)
-	ret0, _ := ret[0].([]*get_post.Post)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserPostMetadatas indicates an expected call of GetUserPostMetadatas.
-func (mr *MockRepositoryMockRecorder) GetUserPostMetadatas(username interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPostMetadatas", reflect.TypeOf((*MockRepository)(nil).GetUserPostMetadatas), username)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlsForDownloading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlsForDownloading), username)
 }

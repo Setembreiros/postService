@@ -172,6 +172,41 @@ func (dc *DynamoDBClient) GetData(tableName string, key any, result any) error {
 	return nil
 }
 
+func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post, error) {
+	input := &dynamodb.QueryInput{
+		TableName:              aws.String("Posts"),
+		IndexName:              aws.String("UserIndex"),
+		KeyConditionExpression: aws.String("#user = :user"),
+		ExpressionAttributeNames: map[string]string{
+			"#user": "User",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":user": &types.AttributeValueMemberS{Value: username},
+		},
+	}
+
+	response, err := dc.client.Query(context.TODO(), input)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't get info about Posts")
+		return nil, err
+	}
+
+	var results []*database.Post
+	for _, item := range response.Items {
+
+		var result database.Post
+		err = attributevalue.UnmarshalMap(item, &result)
+		if err != nil {
+			log.Error().Stack().Err(err).Msg("Couldn't unmarshal response")
+			return nil, err
+		}
+
+		results = append(results, &result)
+	}
+
+	return results, nil
+}
+
 func (dc *DynamoDBClient) RemoveData(tableName string, key any) error {
 	k, err := attributevalue.MarshalMap(key)
 	if err != nil {
