@@ -33,6 +33,21 @@ func (m *MockObjectStorageClient) EXPECT() *MockObjectStorageClientMockRecorder 
 	return m.recorder
 }
 
+// GetPreSignedUrlForGettingObject mocks base method.
+func (m *MockObjectStorageClient) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPreSignedUrlForGettingObject", objectKey)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreSignedUrlForGettingObject indicates an expected call of GetPreSignedUrlForGettingObject.
+func (mr *MockObjectStorageClientMockRecorder) GetPreSignedUrlForGettingObject(objectKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreSignedUrlForGettingObject", reflect.TypeOf((*MockObjectStorageClient)(nil).GetPreSignedUrlForGettingObject), objectKey)
+}
+
 // GetPreSignedUrlForPuttingObject mocks base method.
 func (m *MockObjectStorageClient) GetPreSignedUrlForPuttingObject(objectKey string) (string, error) {
 	m.ctrl.T.Helper()

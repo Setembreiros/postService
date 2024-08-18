@@ -51,8 +51,8 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
-	objectClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey1)
-	objectClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey2)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2)
 
 	getPostRepository.GetPresignedUrlsForDownloading(username)
 }
@@ -90,8 +90,8 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
 	expectedResult := []string{"url2"}
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
-	objectClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey1).Return("", errors.New("some error"))
-	objectClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey2).Return(expectedResult[0], nil)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1).Return("", errors.New("some error"))
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0], nil)
 
 	result, err := getPostRepository.GetPresignedUrlsForDownloading(username)
 
