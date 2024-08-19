@@ -9,6 +9,7 @@ type ObjectStorage struct {
 
 type ObjectStorageClient interface {
 	GetPreSignedUrlForPuttingObject(objectKey string) (string, error)
+	GetPreSignedUrlForGettingObject(objectKey string) (string, error)
 }
 
 func NewObjectStorage(client ObjectStorageClient) *ObjectStorage {

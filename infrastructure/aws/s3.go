@@ -39,3 +39,17 @@ func (s3c *S3Client) GetPreSignedUrlForPuttingObject(objectKey string) (string, 
 	}
 	return request.URL, err
 }
+
+func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
+	request, err := s3c.presignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(s3c.bucketName),
+		Key:    aws.String(objectKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
+	})
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to get %v:%v.",
+			s3c.bucketName, objectKey)
+	}
+	return request.URL, err
+}

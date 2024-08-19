@@ -50,7 +50,7 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	return r.dataRepository.Client.InsertData("Posts", data)
 }
 
-func (r *CreatePostRepository) GetPresignedUrlForUploadingText(post *Post) (string, error) {
+func (r *CreatePostRepository) GetPresignedUrlForUploading(post *Post) (string, error) {
 	key := post.User + "/" + post.Type + "/" + generatePostId(post) + "." + post.FileType
 	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 }

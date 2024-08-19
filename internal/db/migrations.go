@@ -22,5 +22,33 @@ func (db *Database) ApplyMigrations(ctx context.Context) error {
 		}
 	}
 
+	if !db.Client.IndexExists("Posts", "UserIndex") {
+		indexes := []TableAttributes{
+			{
+				Name:          "User",
+				AttributeType: "string",
+			},
+			{
+				Name:          "CreatedAt",
+				AttributeType: "string",
+			},
+		}
+		db.Client.CreateIndexesOnTable("Posts", "UserIndex", &indexes, ctx)
+	}
+
+	if !db.Client.IndexExists("Posts", "TypeIndex") {
+		indexes := []TableAttributes{
+			{
+				Name:          "Type",
+				AttributeType: "string",
+			},
+			{
+				Name:          "CreatedAt",
+				AttributeType: "string",
+			},
+		}
+		db.Client.CreateIndexesOnTable("Posts", "TypeIndex", &indexes, ctx)
+	}
+
 	return nil
 }

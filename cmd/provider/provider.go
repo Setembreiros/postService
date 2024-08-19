@@ -8,6 +8,7 @@ import (
 	"postservice/internal/bus"
 	database "postservice/internal/db"
 	"postservice/internal/features/create_post"
+	"postservice/internal/features/get_post"
 	objectstorage "postservice/internal/objectStorage"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -48,6 +49,7 @@ func (p *Provider) ProvideApiEndpoint(database *database.Database, objectReposit
 func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
 		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository), bus),
+		get_post.NewGetPostController(get_post.NewGetPostRepository(database, objectRepository)),
 	}
 }
 

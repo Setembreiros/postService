@@ -42,7 +42,7 @@ func TestCreatePostWithService(t *testing.T) {
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
-	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost).Return("https://presigned/url", nil)
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return("https://presigned/url", nil)
 
 	postId, presignedUrl, err := createPostService.CreatePost(newPost)
 
@@ -63,7 +63,7 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
-	serviceRepository.EXPECT().GetPresignedUrlForUploadingText(newPost)
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost)
 
 	postId, presignedUrl, err := createPostService.CreatePost(newPost)
 
