@@ -19,6 +19,7 @@ var getPostService *get_post.GetPostService
 func setUpService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	serviceRepository = mock_get_post.NewMockRepository(ctrl)
+	serviceLoggerOutput.Truncate(0)
 	log.Logger = log.Output(&serviceLoggerOutput)
 	getPostService = get_post.NewGetPostService(serviceRepository)
 }

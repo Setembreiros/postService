@@ -49,3 +49,7 @@ func SendNotFound(c *gin.Context, errorMessage string) {
 func SendInternalServerError(c *gin.Context, errorMessage string) {
 	SendFailure(c, http.StatusInternalServerError, errorMessage)
 }
+
+func SendBadRequest(c *gin.Context, errorMessage string) {
+	SendFailure(c, http.StatusBadRequest, errorMessage)
+}
