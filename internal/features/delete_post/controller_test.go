@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"postservice/internal/bus"
+	mock_bus "postservice/internal/bus/mock"
 	database "postservice/internal/db"
 	"postservice/internal/features/delete_post"
 	mock_delete_post "postservice/internal/features/delete_post/mock"
@@ -20,6 +22,8 @@ import (
 
 var controllerLoggerOutput bytes.Buffer
 var controllerRepository *mock_delete_post.MockRepository
+var controllerExternalBus *mock_bus.MockExternalBus
+var controllerBus *bus.EventBus
 var controller *delete_post.DeletePostController
 var apiResponse *httptest.ResponseRecorder
 var ginContext *gin.Context
@@ -28,7 +32,9 @@ func setUpHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	controllerRepository = mock_delete_post.NewMockRepository(ctrl)
 	log.Logger = log.Output(&controllerLoggerOutput)
-	controller = delete_post.NewDeletePostController(controllerRepository)
+	controllerExternalBus = mock_bus.NewMockExternalBus(ctrl)
+	controllerBus = bus.NewEventBus(controllerExternalBus)
+	controller = delete_post.NewDeletePostController(controllerRepository, controllerBus)
 	gin.SetMode(gin.TestMode)
 	apiResponse = httptest.NewRecorder()
 	ginContext, _ = gin.CreateTestContext(apiResponse)
@@ -39,6 +45,11 @@ func TestDeletePosts(t *testing.T) {
 	req, _ := http.NewRequest("DELETE", "/posts?post_id=1&post_id=2&post_id=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(nil)
+	expectedPostsWereDeletedEvent := &delete_post.PostsWereDeletedEvent{
+		PostIds: []string{"1", "2", "3"},
+	}
+	expectedEvent := createEvent("PostsWereDeletedEvent", expectedPostsWereDeletedEvent)
+	controllerExternalBus.EXPECT().Publish(expectedEvent).Return(nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -51,7 +62,6 @@ func TestDeletePosts(t *testing.T) {
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
-// Test para a falta de parámetros post_id
 func TestDeletePosts_MissingPostID(t *testing.T) {
 	setUpHandler(t)
 	req, _ := http.NewRequest("DELETE", "/posts", nil)
@@ -68,7 +78,6 @@ func TestDeletePosts_MissingPostID(t *testing.T) {
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
-// Test para erros de non atopado
 func TestDeletePosts_NotFound(t *testing.T) {
 	setUpHandler(t)
 	req, _ := http.NewRequest("DELETE", "/posts?post_id=1&post_id=2&post_id=3", nil)

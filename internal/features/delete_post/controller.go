@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"postservice/internal/api"
+	"postservice/internal/bus"
 	database "postservice/internal/db"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,9 @@ type DeletePostController struct {
 	service *DeletePostService
 }
 
-func NewDeletePostController(repository Repository) *DeletePostController {
+func NewDeletePostController(repository Repository, bus *bus.EventBus) *DeletePostController {
 	return &DeletePostController{
-		service: NewDeletePostService(repository),
+		service: NewDeletePostService(repository, bus),
 	}
 }
 

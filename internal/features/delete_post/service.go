@@ -1,6 +1,8 @@
 package delete_post
 
 import (
+	"postservice/internal/bus"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -12,11 +14,17 @@ type Repository interface {
 
 type DeletePostService struct {
 	repository Repository
+	bus        *bus.EventBus
 }
 
-func NewDeletePostService(repository Repository) *DeletePostService {
+type PostsWereDeletedEvent struct {
+	PostIds []string `json:"post_ids"`
+}
+
+func NewDeletePostService(repository Repository, bus *bus.EventBus) *DeletePostService {
 	return &DeletePostService{
 		repository: repository,
+		bus:        bus,
 	}
 }
 
@@ -27,6 +35,21 @@ func (s *DeletePostService) DeletePosts(postIds []string) error {
 		return err
 	}
 
+	s.publishPostsWereDeletedEvent(postIds)
+
 	log.Info().Msgf("%v were deleted", postIds)
+	return nil
+}
+
+func (s *DeletePostService) publishPostsWereDeletedEvent(postIds []string) error {
+	event := &PostsWereDeletedEvent{
+		PostIds: postIds,
+	}
+	err := s.bus.Publish("PostsWereDeletedEvent", event)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Publishing PostsWereDeletedEvent failed")
+		return err
+	}
+
 	return nil
 }
