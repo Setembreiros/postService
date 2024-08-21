@@ -33,6 +33,20 @@ func (m *MockObjectStorageClient) EXPECT() *MockObjectStorageClientMockRecorder 
 	return m.recorder
 }
 
+// DeleteObjects mocks base method.
+func (m *MockObjectStorageClient) DeleteObjects(objectKeys []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjects", objectKeys)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObjects indicates an expected call of DeleteObjects.
+func (mr *MockObjectStorageClientMockRecorder) DeleteObjects(objectKeys interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjects", reflect.TypeOf((*MockObjectStorageClient)(nil).DeleteObjects), objectKeys)
+}
+
 // GetPreSignedUrlForGettingObject mocks base method.
 func (m *MockObjectStorageClient) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
 	m.ctrl.T.Helper()

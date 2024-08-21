@@ -172,6 +172,40 @@ func (dc *DynamoDBClient) GetData(tableName string, key any, result any) error {
 	return nil
 }
 
+func (dc *DynamoDBClient) GetPostsByIds(postIds []string) ([]*database.Post, error) {
+	keys := make([]map[string]types.AttributeValue, len(postIds))
+	for i, postId := range postIds {
+		keys[i] = map[string]types.AttributeValue{
+			"PostId": &types.AttributeValueMemberS{Value: postId},
+		}
+	}
+
+	input := &dynamodb.BatchGetItemInput{
+		RequestItems: map[string]types.KeysAndAttributes{
+			"Posts": {
+				Keys: keys,
+			},
+		},
+	}
+
+	result, err := dc.client.BatchGetItem(context.TODO(), input)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("failed to batch get items")
+		return nil, err
+	}
+
+	var posts []*database.Post
+	if result.Responses != nil {
+		err = attributevalue.UnmarshalListOfMaps(result.Responses["Posts"], &posts)
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("failed to unmarshal dynamoDB response")
+			return nil, err
+		}
+	}
+
+	return posts, nil
+}
+
 func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post, error) {
 	input := &dynamodb.QueryInput{
 		TableName:              aws.String("Posts"),
@@ -218,6 +252,33 @@ func (dc *DynamoDBClient) RemoveData(tableName string, key any) error {
 	})
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Couldn't remove item %v from table %s", key, tableName)
+		return err
+	}
+
+	return nil
+}
+
+func (dc *DynamoDBClient) RemoveMultiplePosts(postIds []string) error {
+	writeRequests := make([]types.WriteRequest, len(postIds))
+	for i, postId := range postIds {
+		writeRequests[i] = types.WriteRequest{
+			DeleteRequest: &types.DeleteRequest{
+				Key: map[string]types.AttributeValue{
+					"PostId": &types.AttributeValueMemberS{Value: postId},
+				},
+			},
+		}
+	}
+
+	input := &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			"Posts": writeRequests,
+		},
+	}
+
+	_, err := dc.client.BatchWriteItem(context.TODO(), input)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to batch delete items %v from table %s", postIds, "Posts")
 		return err
 	}
 
