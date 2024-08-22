@@ -2,6 +2,10 @@ package database
 
 import "time"
 
+type PostKey struct {
+	PostId string
+}
+
 type Post struct {
 	PostId      string    `json:"post_id"`
 	User        string    `json:"username"`

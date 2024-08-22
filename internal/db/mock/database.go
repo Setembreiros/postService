@@ -149,18 +149,18 @@ func (mr *MockDatabaseClientMockRecorder) RemoveData(tableName, key interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveData", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveData), tableName, key)
 }
 
-// RemoveMultiplePosts mocks base method.
-func (m *MockDatabaseClient) RemoveMultiplePosts(postIds []string) error {
+// RemoveMultipleData mocks base method.
+func (m *MockDatabaseClient) RemoveMultipleData(tableName string, keys []any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMultiplePosts", postIds)
+	ret := m.ctrl.Call(m, "RemoveMultipleData", tableName, keys)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RemoveMultiplePosts indicates an expected call of RemoveMultiplePosts.
-func (mr *MockDatabaseClientMockRecorder) RemoveMultiplePosts(postIds interface{}) *gomock.Call {
+// RemoveMultipleData indicates an expected call of RemoveMultipleData.
+func (mr *MockDatabaseClientMockRecorder) RemoveMultipleData(tableName, keys interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMultiplePosts", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveMultiplePosts), postIds)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMultipleData", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveMultipleData), tableName, keys)
 }
 
 // TableExists mocks base method.

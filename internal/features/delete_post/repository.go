@@ -38,11 +38,24 @@ func (r *DeletePostRepository) DeletePosts(postIds []string) error {
 		return err
 	}
 
-	err = r.dataRepository.Client.RemoveMultiplePosts(postIds)
+	err = r.removePosts(postIds)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error deletting post metadatas for postIds %v", postIds)
 		return err
 	}
 
 	return nil
+}
+
+func (r *DeletePostRepository) removePosts(postIds []string) error {
+	postKeys := make([]any, len(postIds))
+	for i, v := range postIds {
+		postKeys[i] = &database.PostKey{
+			PostId: v,
+		}
+	}
+
+	err := r.dataRepository.Client.RemoveMultipleData("Posts", postKeys)
+
+	return err
 }
