@@ -22,8 +22,10 @@ type DatabaseClient interface {
 	CreateIndexesOnTable(tableName, indexName string, inndexes *[]TableAttributes, ctx context.Context) error
 	InsertData(tableName string, attributes any) error
 	GetData(tableName string, key any, result any) error
-	GetPostsByIndexUser(username string) ([]*Post, error)
 	RemoveData(tableName string, key any) error
+	RemoveMultipleData(tableName string, keys []any) error
+	GetPostsByIds(postIds []string) ([]*Post, error)
+	GetPostsByIndexUser(username string) ([]*Post, error)
 }
 
 func NewDatabase(client DatabaseClient) *Database {

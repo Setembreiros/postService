@@ -77,6 +77,21 @@ func (mr *MockDatabaseClientMockRecorder) GetData(tableName, key, result interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetData", reflect.TypeOf((*MockDatabaseClient)(nil).GetData), tableName, key, result)
 }
 
+// GetPostsByIds mocks base method.
+func (m *MockDatabaseClient) GetPostsByIds(postIds []string) ([]*database.Post, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPostsByIds", postIds)
+	ret0, _ := ret[0].([]*database.Post)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPostsByIds indicates an expected call of GetPostsByIds.
+func (mr *MockDatabaseClientMockRecorder) GetPostsByIds(postIds interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostsByIds", reflect.TypeOf((*MockDatabaseClient)(nil).GetPostsByIds), postIds)
+}
+
 // GetPostsByIndexUser mocks base method.
 func (m *MockDatabaseClient) GetPostsByIndexUser(username string) ([]*database.Post, error) {
 	m.ctrl.T.Helper()
@@ -132,6 +147,20 @@ func (m *MockDatabaseClient) RemoveData(tableName string, key any) error {
 func (mr *MockDatabaseClientMockRecorder) RemoveData(tableName, key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveData", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveData), tableName, key)
+}
+
+// RemoveMultipleData mocks base method.
+func (m *MockDatabaseClient) RemoveMultipleData(tableName string, keys []any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveMultipleData", tableName, keys)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMultipleData indicates an expected call of RemoveMultipleData.
+func (mr *MockDatabaseClientMockRecorder) RemoveMultipleData(tableName, keys interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMultipleData", reflect.TypeOf((*MockDatabaseClient)(nil).RemoveMultipleData), tableName, keys)
 }
 
 // TableExists mocks base method.

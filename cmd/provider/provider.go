@@ -8,6 +8,7 @@ import (
 	"postservice/internal/bus"
 	database "postservice/internal/db"
 	"postservice/internal/features/create_post"
+	"postservice/internal/features/delete_post"
 	"postservice/internal/features/get_post"
 	objectstorage "postservice/internal/objectStorage"
 
@@ -50,6 +51,7 @@ func (p *Provider) ProvideApiControllers(database *database.Database, objectRepo
 	return []api.Controller{
 		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository), bus),
 		get_post.NewGetPostController(get_post.NewGetPostRepository(database, objectRepository)),
+		delete_post.NewDeletePostController(delete_post.NewDeletePostRepository(database, objectRepository), bus),
 	}
 }
 

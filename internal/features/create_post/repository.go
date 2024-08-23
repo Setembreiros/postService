@@ -1,7 +1,6 @@
 package create_post
 
 import (
-	"fmt"
 	database "postservice/internal/db"
 	objectstorage "postservice/internal/objectStorage"
 	"strconv"
@@ -62,7 +61,6 @@ func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
 	var post Post
 	err := r.dataRepository.Client.GetData("Posts", postKey, &post)
 
-	fmt.Println(post)
 	return &post, err
 }
 

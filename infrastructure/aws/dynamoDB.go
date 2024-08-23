@@ -172,6 +172,86 @@ func (dc *DynamoDBClient) GetData(tableName string, key any, result any) error {
 	return nil
 }
 
+func (dc *DynamoDBClient) RemoveData(tableName string, key any) error {
+	k, err := attributevalue.MarshalMap(key)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't map %v key to AttributeValues", key)
+	}
+
+	_, err = dc.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String(tableName), Key: k,
+	})
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't remove item %v from table %s", key, tableName)
+		return err
+	}
+
+	return nil
+}
+
+func (dc *DynamoDBClient) RemoveMultipleData(tableName string, keys []any) error {
+	writeRequests := make([]types.WriteRequest, len(keys))
+	for i, key := range keys {
+		k, err := attributevalue.MarshalMap(key)
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("Couldn't map %v key to AttributeValues", key)
+		}
+		writeRequests[i] = types.WriteRequest{
+			DeleteRequest: &types.DeleteRequest{
+				Key: k,
+			},
+		}
+	}
+
+	input := &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			tableName: writeRequests,
+		},
+	}
+
+	_, err := dc.client.BatchWriteItem(context.TODO(), input)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to batch delete items %v from table %s", keys, tableName)
+		return err
+	}
+
+	return nil
+}
+
+func (dc *DynamoDBClient) GetPostsByIds(postIds []string) ([]*database.Post, error) {
+	keys := make([]map[string]types.AttributeValue, len(postIds))
+	for i, postId := range postIds {
+		keys[i] = map[string]types.AttributeValue{
+			"PostId": &types.AttributeValueMemberS{Value: postId},
+		}
+	}
+
+	input := &dynamodb.BatchGetItemInput{
+		RequestItems: map[string]types.KeysAndAttributes{
+			"Posts": {
+				Keys: keys,
+			},
+		},
+	}
+
+	result, err := dc.client.BatchGetItem(context.TODO(), input)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("failed to batch get items")
+		return nil, err
+	}
+
+	var posts []*database.Post
+	if result.Responses != nil {
+		err = attributevalue.UnmarshalListOfMaps(result.Responses["Posts"], &posts)
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("failed to unmarshal dynamoDB response")
+			return nil, err
+		}
+	}
+
+	return posts, nil
+}
+
 func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post, error) {
 	input := &dynamodb.QueryInput{
 		TableName:              aws.String("Posts"),
@@ -205,23 +285,6 @@ func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post
 	}
 
 	return results, nil
-}
-
-func (dc *DynamoDBClient) RemoveData(tableName string, key any) error {
-	k, err := attributevalue.MarshalMap(key)
-	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Couldn't map %v key to AttributeValues", key)
-	}
-
-	_, err = dc.client.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
-		TableName: aws.String(tableName), Key: k,
-	})
-	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Couldn't remove item %v from table %s", key, tableName)
-		return err
-	}
-
-	return nil
 }
 
 func mapTableKeys(keys *[]database.TableAttributes) (*[]types.KeySchemaElement, *[]types.AttributeDefinition, error) {
