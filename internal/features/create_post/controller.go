@@ -34,6 +34,7 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 
 	if err := c.BindJSON(&post); err != nil {
 		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
 		return
 	}
 
@@ -55,6 +56,7 @@ func (controller *CreatePostController) ConfirmCreatedPost(c *gin.Context) {
 	var post ConfirmedCreatedPost
 	if err := c.BindJSON(&post); err != nil {
 		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
 		return
 	}
 
