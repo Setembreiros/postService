@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"postservice/internal/bus"
 	"postservice/internal/features/create_post"
 	mock_create_post "postservice/internal/features/create_post/mock"
 	"strings"
@@ -20,18 +19,16 @@ import (
 )
 
 var controllerLoggerOutput bytes.Buffer
-var controllerRepository *mock_create_post.MockRepository
-var controllerBus *bus.EventBus
+var controllerService *mock_create_post.MockService
 var controller *create_post.CreatePostController
 var apiResponse *httptest.ResponseRecorder
 var ginContext *gin.Context
 
 func setUpHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	controllerRepository = mock_create_post.NewMockRepository(ctrl)
-	controllerBus = &bus.EventBus{}
+	controllerService = mock_create_post.NewMockService(ctrl)
 	log.Logger = log.Output(&controllerLoggerOutput)
-	controller = create_post.NewCreatePostController(controllerRepository, controllerBus)
+	controller = create_post.NewCreatePostController(controllerService)
 	gin.SetMode(gin.TestMode)
 	apiResponse = httptest.NewRecorder()
 	ginContext, _ = gin.CreateTestContext(apiResponse)
@@ -45,19 +42,17 @@ func TestCreatePost(t *testing.T) {
 		FileType:    "jpg",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
+	expectedPostId := "username1-Meu_Post-1723153880"
 	expectedPresignedUrl := "https://presigned/url"
-	controllerRepository.EXPECT().AddNewPostMetaData(newPost)
-	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return(expectedPresignedUrl, nil)
+	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, expectedPresignedUrl, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
-			"post_id": "username1-Meu_Post-1723153880",
+			"post_id": "` + expectedPostId + `",
 			"presigned_url":"` + expectedPresignedUrl + `"
 		}
 	}`
@@ -81,8 +76,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
-	controllerRepository.EXPECT().AddNewPostMetaData(newPost).Return(expectedError)
-	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost)
+	controllerService.EXPECT().CreatePost(newPost).Return("", "", expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
@@ -95,7 +89,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
-func TestConfirmCreatedPostWhenIsNotConfirmed(t *testing.T) {
+func TestConfirmCreatedPost(t *testing.T) {
 	setUpHandler(t)
 	notConfirmedPost := &create_post.ConfirmedCreatedPost{
 		IsConfirmed: false,
@@ -103,7 +97,7 @@ func TestConfirmCreatedPostWhenIsNotConfirmed(t *testing.T) {
 	}
 	data, _ := serializeData(notConfirmedPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPut, "/confirm-created-post", bytes.NewBuffer(data))
-	controllerRepository.EXPECT().RemoveUnconfirmedPost(notConfirmedPost.PostId)
+	controllerService.EXPECT().ConfirmCreatedPost(notConfirmedPost).Return(nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",

@@ -7,6 +7,7 @@ package mock_create_post
 import (
 	create_post "postservice/internal/features/create_post"
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -90,4 +91,41 @@ func (m *MockRepository) RemoveUnconfirmedPost(postId string) error {
 func (mr *MockRepositoryMockRecorder) RemoveUnconfirmedPost(postId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUnconfirmedPost", reflect.TypeOf((*MockRepository)(nil).RemoveUnconfirmedPost), postId)
+}
+
+// MockTimeService is a mock of TimeService interface.
+type MockTimeService struct {
+	ctrl     *gomock.Controller
+	recorder *MockTimeServiceMockRecorder
+}
+
+// MockTimeServiceMockRecorder is the mock recorder for MockTimeService.
+type MockTimeServiceMockRecorder struct {
+	mock *MockTimeService
+}
+
+// NewMockTimeService creates a new mock instance.
+func NewMockTimeService(ctrl *gomock.Controller) *MockTimeService {
+	mock := &MockTimeService{ctrl: ctrl}
+	mock.recorder = &MockTimeServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTimeService) EXPECT() *MockTimeServiceMockRecorder {
+	return m.recorder
+}
+
+// UTC mocks base method.
+func (m *MockTimeService) UTC() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UTC")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// UTC indicates an expected call of UTC.
+func (mr *MockTimeServiceMockRecorder) UTC() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UTC", reflect.TypeOf((*MockTimeService)(nil).UTC))
 }

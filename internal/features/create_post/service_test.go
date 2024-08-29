@@ -17,6 +17,7 @@ import (
 )
 
 var serviceLoggerOutput bytes.Buffer
+var timeService *mock_create_post.MockTimeService
 var serviceRepository *mock_create_post.MockRepository
 var serviceExternalBus *mock_bus.MockExternalBus
 var serviceBus *bus.EventBus
@@ -24,23 +25,26 @@ var createPostService *create_post.CreatePostService
 
 func setUpService(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	timeService = mock_create_post.NewMockTimeService(ctrl)
 	serviceRepository = mock_create_post.NewMockRepository(ctrl)
 	log.Logger = log.Output(&serviceLoggerOutput)
 	serviceExternalBus = mock_bus.NewMockExternalBus(ctrl)
 	serviceBus = bus.NewEventBus(serviceExternalBus)
-	createPostService = create_post.NewCreatePostService(serviceRepository, serviceBus)
+	createPostService = create_post.NewCreatePostService(timeService, serviceRepository, serviceBus)
 }
 
 func TestCreatePostWithService(t *testing.T) {
 	setUpService(t)
+	now := time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC()
 	newPost := &create_post.Post{
 		User:        "username1",
 		Type:        "Text",
 		Title:       "Meu Post",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		CreatedAt:   now,
+		LastUpdated: now,
 	}
+	timeService.EXPECT().UTC().Return(now)
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
 	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return("https://presigned/url", nil)
 
@@ -54,14 +58,16 @@ func TestCreatePostWithService(t *testing.T) {
 
 func TestErrorOnCreatePostWithService(t *testing.T) {
 	setUpService(t)
+	now := time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC()
 	newPost := &create_post.Post{
 		User:        "username1",
 		Title:       "Meu Post",
 		Type:        "Text",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		CreatedAt:   now,
+		LastUpdated: now,
 	}
+	timeService.EXPECT().UTC().Return(now)
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
 	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost)
 

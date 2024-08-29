@@ -16,9 +16,14 @@ type Repository interface {
 	RemoveUnconfirmedPost(postId string) error
 }
 
+type TimeService interface {
+	UTC() time.Time
+}
+
 type CreatePostService struct {
-	repository Repository
-	bus        *bus.EventBus
+	timeService TimeService
+	repository  Repository
+	bus         *bus.EventBus
 }
 
 type Post struct {
@@ -41,16 +46,21 @@ type PostWasCreatedEvent struct {
 	Metadata *Post  `json:"metadata"`
 }
 
-func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostService {
+func NewCreatePostService(timeService TimeService, repository Repository, bus *bus.EventBus) *CreatePostService {
 	return &CreatePostService{
-		repository: repository,
-		bus:        bus,
+		timeService: timeService,
+		repository:  repository,
+		bus:         bus,
 	}
 }
 
 func (s *CreatePostService) CreatePost(post *Post) (string, string, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan string, 1)
+
+	now := s.timeService.UTC()
+	post.CreatedAt = now
+	post.LastUpdated = now
 
 	go s.savePostMetaData(post, chError)
 	go s.generetePreSignedUrl(post, chResult, chError)

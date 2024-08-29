@@ -2,14 +2,20 @@ package create_post
 
 import (
 	"postservice/internal/api"
-	"postservice/internal/bus"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=controller.go -destination=mock/controller.go
+
+type Service interface {
+	CreatePost(post *Post) (string, string, error)
+	ConfirmCreatedPost(post *ConfirmedCreatedPost) error
+}
+
 type CreatePostController struct {
-	service *CreatePostService
+	service Service
 }
 
 type CreatePostResponse struct {
@@ -17,9 +23,9 @@ type CreatePostResponse struct {
 	PresignedUrl string `json:"presigned_url"`
 }
 
-func NewCreatePostController(repository Repository, bus *bus.EventBus) *CreatePostController {
+func NewCreatePostController(service Service) *CreatePostController {
 	return &CreatePostController{
-		service: NewCreatePostService(repository, bus),
+		service: service,
 	}
 }
 
