@@ -19,23 +19,27 @@ func NewGetPostRepository(dataRepository *database.Database, objectRepository *o
 	}
 }
 
-func (r *GetPostRepository) GetPresignedUrlsForDownloading(username string) ([]string, error) {
+func (r *GetPostRepository) GetPresignedUrlsForDownloading(username string) ([]PostUrl, error) {
 	posts, err := r.dataRepository.Client.GetPostsByIndexUser(username)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error getting post metadatas for username %s", username)
-		return []string{}, err
+		return []PostUrl{}, err
 	}
 
-	var presignedUrls []string
+	var postUrls []PostUrl
 	for _, post := range posts {
 		key := post.User + "/" + post.Type + "/" + post.PostId + "." + post.FileType
 		url, err := r.objectRepository.Client.GetPreSignedUrlForGettingObject(key)
+		posturl := PostUrl{
+			PostId:       post.PostId,
+			PresignedUrl: url,
+		}
 		if err != nil {
 			log.Error().Stack().Err(err).Msgf("Error getting presigned URLs for Post %s", post.PostId)
 			continue
 		}
-		presignedUrls = append(presignedUrls, url)
+		postUrls = append(postUrls, posturl)
 	}
 
-	return presignedUrls, nil
+	return postUrls, nil
 }

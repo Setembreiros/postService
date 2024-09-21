@@ -35,12 +35,25 @@ func TestGetUserPost(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
-	expectedPresignedUrls := []string{"url1", "url2", "url3"}
+	expectedPresignedUrls := []get_post.PostUrl{
+		{
+			PostId:       "post1",
+			PresignedUrl: "url1",
+		},
+		{
+			PostId:       "post2",
+			PresignedUrl: "url2",
+		},
+		{
+			PostId:       "post3",
+			PresignedUrl: "url3",
+		},
+	}
 	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username).Return(expectedPresignedUrls, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": ["url1", "url2", "url3"]
+		"content": {"urlPosts":[{"postId":"post1","url":"url1"},{"postId":"post2","url":"url2"},{"postId":"post3","url":"url3"}]}
 	}`
 
 	controller.GetUserPosts(ginContext)
@@ -54,7 +67,7 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	username := "username1"
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	expectedError := errors.New("some error")
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username).Return([]string{}, expectedError)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username).Return([]get_post.PostUrl{}, expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
