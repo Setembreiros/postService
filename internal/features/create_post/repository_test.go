@@ -48,21 +48,40 @@ func TestAddNewPostMetaDataInRepository(t *testing.T) {
 	createPostRepository.AddNewPostMetaData(newPost)
 }
 
-func TestGetPresignedUrlsForUploading(t *testing.T) {
+func TestGetPresignedUrlsForUploading_HasThumbnailIsTrue(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
-		User:        "username1",
-		Type:        "Text",
-		FileType:    "jpg",
-		Title:       "Meu Post",
-		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		User:         "username1",
+		Type:         "Text",
+		FileType:     "jpg",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: true,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880.jpg"
 	expectedThumbnailKey := "username1/Text/THUMBNAILS/username1-Meu_Post-1723153880.jpg"
 	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
 	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedThumbnailKey)
+
+	createPostRepository.GetPresignedUrlsForUploading(newPost)
+}
+
+func TestGetPresignedUrlsForUploading_HasThumbnailIsFalse(t *testing.T) {
+	setUp(t)
+	newPost := &create_post.Post{
+		User:         "username1",
+		Type:         "Text",
+		FileType:     "jpg",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: false,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+	}
+	expectedKey := "username1/Text/username1-Meu_Post-1723153880.jpg"
+	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
 
 	createPostRepository.GetPresignedUrlsForUploading(newPost)
 }

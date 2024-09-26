@@ -45,11 +45,15 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	api.SendOKWithResult(c, &CreatePostResponse{
-		PostId:                postId,
-		PresignedUrl:          presignedUrls[0],
-		PresignedThumbnailUrl: presignedUrls[1],
-	})
+	postResponse := &CreatePostResponse{
+		PostId:       postId,
+		PresignedUrl: presignedUrls[0],
+	}
+	if post.HasThumbnail {
+		postResponse.PresignedThumbnailUrl = presignedUrls[1]
+	}
+
+	api.SendOKWithResult(c, postResponse)
 }
 
 func (controller *CreatePostController) ConfirmCreatedPost(c *gin.Context) {

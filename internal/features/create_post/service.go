@@ -11,7 +11,7 @@ import (
 
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
-	GetPresignedUrlsForUploading(data *Post) (string, string, error)
+	GetPresignedUrlsForUploading(data *Post) ([]string, error)
 	GetPostMetadata(postId string) (*Post, error)
 	RemoveUnconfirmedPost(postId string) error
 }
@@ -22,13 +22,14 @@ type CreatePostService struct {
 }
 
 type Post struct {
-	User        string    `json:"username"`
-	Type        string    `json:"type"`
-	FileType    string    `json:"file_type"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	LastUpdated time.Time `json:"last_updated"`
+	User         string    `json:"username"`
+	Type         string    `json:"type"`
+	FileType     string    `json:"fileType"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description"`
+	HasThumbnail bool      `json:"hasThumbnail"`
+	CreatedAt    time.Time `json:"createdAt"`
+	LastUpdated  time.Time `json:"lastUpdated"`
 }
 
 type ConfirmedCreatedPost struct {
@@ -105,14 +106,14 @@ func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
 }
 
 func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan []string, chError chan<- error) {
-	presignedUrl, presignedThumbnailUrl, err := s.repository.GetPresignedUrlsForUploading(post)
+	presignedUrls, err := s.repository.GetPresignedUrlsForUploading(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
 		chError <- err
 	}
 
 	chError <- nil
-	chResult <- []string{presignedUrl, presignedThumbnailUrl}
+	chResult <- presignedUrls
 }
 
 func (s *CreatePostService) publishPostWasCreatedEvent(postId string, metadata *Post) error {

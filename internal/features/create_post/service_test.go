@@ -34,15 +34,16 @@ func setUpService(t *testing.T) {
 func TestCreatePostWithService(t *testing.T) {
 	setUpService(t)
 	newPost := &create_post.Post{
-		User:        "username1",
-		Type:        "Text",
-		Title:       "Meu Post",
-		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		User:         "username1",
+		Type:         "Text",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: true,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
-	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return("https://presigned/url", "https://presignedThumbanail/url", nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{"https://presigned/url", "https://presignedThumbanail/url"}, nil)
 
 	postId, presignedUrls, err := createPostService.CreatePost(newPost)
 
