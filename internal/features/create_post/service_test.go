@@ -42,12 +42,13 @@ func TestCreatePostWithService(t *testing.T) {
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
-	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return("https://presigned/url", nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return("https://presigned/url", "https://presignedThumbanail/url", nil)
 
-	postId, presignedUrl, err := createPostService.CreatePost(newPost)
+	postId, presignedUrls, err := createPostService.CreatePost(newPost)
 
 	assert.Equal(t, "username1-Meu_Post-1723153880", postId)
-	assert.Equal(t, "https://presigned/url", presignedUrl)
+	assert.Equal(t, "https://presigned/url", presignedUrls[0])
+	assert.Equal(t, "https://presignedThumbanail/url", presignedUrls[1])
 	assert.Nil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Post Meu Post was created")
 }
@@ -63,12 +64,12 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
-	serviceRepository.EXPECT().GetPresignedUrlForUploading(newPost)
+	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost)
 
-	postId, presignedUrl, err := createPostService.CreatePost(newPost)
+	postId, presignedUrls, err := createPostService.CreatePost(newPost)
 
 	assert.Empty(t, postId)
-	assert.Empty(t, presignedUrl)
+	assert.Empty(t, presignedUrls)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")
 }

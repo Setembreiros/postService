@@ -49,9 +49,18 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	return r.dataRepository.Client.InsertData("Posts", data)
 }
 
-func (r *CreatePostRepository) GetPresignedUrlForUploading(post *Post) (string, error) {
+func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) (string, string, error) {
 	key := post.User + "/" + post.Type + "/" + generatePostId(post) + "." + post.FileType
-	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
+	thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS" + "/" + generatePostId(post) + "." + post.FileType
+	url, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
+	if err != nil {
+		return "", "", err
+	}
+	thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(thumbnailKey)
+	if err != nil {
+		return "", "", err
+	}
+	return url, thumbnailUrl, nil
 }
 
 func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
