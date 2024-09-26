@@ -29,14 +29,20 @@ func (r *GetPostRepository) GetPresignedUrlsForDownloading(username string) ([]P
 	var postUrls []PostUrl
 	for _, post := range posts {
 		key := post.User + "/" + post.Type + "/" + post.PostId + "." + post.FileType
+		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId + "." + post.FileType
 		url, err := r.objectRepository.Client.GetPreSignedUrlForGettingObject(key)
-		posturl := PostUrl{
-			PostId:       post.PostId,
-			PresignedUrl: url,
-		}
 		if err != nil {
 			log.Error().Stack().Err(err).Msgf("Error getting presigned URLs for Post %s", post.PostId)
 			continue
+		}
+		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForGettingObject(thumbnailKey)
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("Error getting presigned thumbnail URLs for Post %s", post.PostId)
+		}
+		posturl := PostUrl{
+			PostId:                post.PostId,
+			PresignedUrl:          url,
+			PresignedThumbnailUrl: thumbnailUrl,
 		}
 		postUrls = append(postUrls, posturl)
 	}

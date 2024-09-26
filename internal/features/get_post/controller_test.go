@@ -37,23 +37,26 @@ func TestGetUserPost(t *testing.T) {
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	expectedPresignedUrls := []get_post.PostUrl{
 		{
-			PostId:       "post1",
-			PresignedUrl: "url1",
+			PostId:                "post1",
+			PresignedUrl:          "url1",
+			PresignedThumbnailUrl: "thumbnailUrl1",
 		},
 		{
-			PostId:       "post2",
-			PresignedUrl: "url2",
+			PostId:                "post2",
+			PresignedUrl:          "url2",
+			PresignedThumbnailUrl: "thumbnailUrl2",
 		},
 		{
-			PostId:       "post3",
-			PresignedUrl: "url3",
+			PostId:                "post3",
+			PresignedUrl:          "url3",
+			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
 	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username).Return(expectedPresignedUrls, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1"},{"postId":"post2","url":"url2"},{"postId":"post3","url":"url3"}]}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}]}
 	}`
 
 	controller.GetUserPosts(ginContext)

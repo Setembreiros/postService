@@ -49,10 +49,14 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 		},
 	}
 	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
+	expectedThumbnailKey1 := data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2)
 
 	getPostRepository.GetPresignedUrlsForDownloading(username)
 }
@@ -88,16 +92,18 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 	}
 	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
-
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
 	expectedResult := []get_post.PostUrl{
 		{
-			PostId:       "usernam1-meuPost2-184639321",
-			PresignedUrl: "url2",
+			PostId:                "usernam1-meuPost2-184639321",
+			PresignedUrl:          "url2",
+			PresignedThumbnailUrl: "thumbnailUrl2",
 		},
 	}
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1).Return("", errors.New("some error"))
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0].PresignedUrl, nil)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2).Return(expectedResult[0].PresignedThumbnailUrl, nil)
 
 	result, err := getPostRepository.GetPresignedUrlsForDownloading(username)
 

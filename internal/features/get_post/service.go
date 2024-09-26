@@ -15,8 +15,9 @@ type GetPostService struct {
 }
 
 type PostUrl struct {
-	PostId       string `json:"postId"`
-	PresignedUrl string `json:"url"`
+	PostId                string `json:"postId"`
+	PresignedUrl          string `json:"url"`
+	PresignedThumbnailUrl string `json:"thumbnailUrl"`
 }
 
 func NewGetPostService(repository Repository) *GetPostService {
