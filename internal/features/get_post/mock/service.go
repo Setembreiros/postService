@@ -5,6 +5,7 @@
 package mock_get_post
 
 import (
+	get_post "postservice/internal/features/get_post"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,10 +35,10 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetPresignedUrlsForDownloading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForDownloading(username string) ([]string, error) {
+func (m *MockRepository) GetPresignedUrlsForDownloading(username string) ([]get_post.PostUrl, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", username)
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].([]get_post.PostUrl)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

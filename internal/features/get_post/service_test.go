@@ -27,7 +27,23 @@ func setUpService(t *testing.T) {
 func TestGetUserPostsWithService(t *testing.T) {
 	setUpService(t)
 	username := "username1"
-	expectedPresignedUrls := []string{"url1", "url2", "url3"}
+	expectedPresignedUrls := []get_post.PostUrl{
+		{
+			PostId:                "post1",
+			PresignedUrl:          "url1",
+			PresignedThumbnailUrl: "thumbnailUrl1",
+		},
+		{
+			PostId:                "post2",
+			PresignedUrl:          "url2",
+			PresignedThumbnailUrl: "thumbnailUrl2",
+		},
+		{
+			PostId:                "post3",
+			PresignedUrl:          "url3",
+			PresignedThumbnailUrl: "thumbnailUrl3",
+		},
+	}
 	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username).Return(expectedPresignedUrls, nil)
 
 	getPostService.GetUserPosts(username)

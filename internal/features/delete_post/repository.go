@@ -29,7 +29,9 @@ func (r *DeletePostRepository) DeletePosts(postIds []string) error {
 	var objectKeys []string
 	for _, post := range posts {
 		objectKey := post.User + "/" + post.Type + "/" + post.PostId + "." + post.FileType
+		thumbnailObjectKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId + "." + post.FileType
 		objectKeys = append(objectKeys, objectKey)
+		objectKeys = append(objectKeys, thumbnailObjectKey)
 	}
 
 	err = r.objectRepository.Client.DeleteObjects(objectKeys)

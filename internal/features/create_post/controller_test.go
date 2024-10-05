@@ -37,28 +37,64 @@ func setUpHandler(t *testing.T) {
 	ginContext, _ = gin.CreateTestContext(apiResponse)
 }
 
-func TestCreatePost(t *testing.T) {
+func TestCreatePost_HasThumbnailIsTrue(t *testing.T) {
 	setUpHandler(t)
 	newPost := &create_post.Post{
-		User:        "username1",
-		Type:        "Text",
-		FileType:    "jpg",
-		Title:       "Meu Post",
-		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		User:         "username1",
+		Type:         "Text",
+		FileType:     "jpg",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: true,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+	}
+	data, _ := serializeData(newPost)
+	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
+	expectedPresignedUrl := "https://presigned/url"
+	expectedPresignedUrlThumbanil := "https://presigned/url/thumbnail"
+	controllerRepository.EXPECT().AddNewPostMetaData(newPost)
+	controllerRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{expectedPresignedUrl, expectedPresignedUrlThumbanil}, nil)
+	expectedBodyResponse := `{
+		"error": false,
+		"message": "200 OK",
+		"content": {
+			"postId": "username1-Meu_Post-1723153880",
+			"presignedUrl":"` + expectedPresignedUrl + `",
+			"presignedThumbnailUrl":"` + expectedPresignedUrlThumbanil + `"
+		}
+	}`
+
+	controller.CreatePost(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestCreatePost_HasThumbnailIsFalse(t *testing.T) {
+	setUpHandler(t)
+	newPost := &create_post.Post{
+		User:         "username1",
+		Type:         "Text",
+		FileType:     "jpg",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: false,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedPresignedUrl := "https://presigned/url"
 	controllerRepository.EXPECT().AddNewPostMetaData(newPost)
-	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost).Return(expectedPresignedUrl, nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{expectedPresignedUrl}, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
-			"post_id": "username1-Meu_Post-1723153880",
-			"presigned_url":"` + expectedPresignedUrl + `"
+			"postId": "username1-Meu_Post-1723153880",
+			"presignedUrl":"` + expectedPresignedUrl + `",
+			"presignedThumbnailUrl":""
 		}
 	}`
 
@@ -82,7 +118,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
 	controllerRepository.EXPECT().AddNewPostMetaData(newPost).Return(expectedError)
-	controllerRepository.EXPECT().GetPresignedUrlForUploading(newPost)
+	controllerRepository.EXPECT().GetPresignedUrlsForUploading(newPost)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",

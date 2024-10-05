@@ -34,25 +34,41 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 	username := "username1"
 	data := []*database.Post{
 		{
-			PostId:    "usernam1-meuPost-170948521",
-			User:      username,
-			Title:     "meuPost",
-			FileType:  "png",
-			CreatedAt: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+			PostId:       "usernam1-meuPost-170948521",
+			User:         username,
+			Title:        "meuPost",
+			FileType:     "png",
+			HasThumbnail: true,
+			CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
-			PostId:    "usernam1-meuPost2-184639321",
-			User:      username,
-			Title:     "meuPost2",
-			FileType:  "pdf",
-			CreatedAt: time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
+			PostId:       "usernam1-meuPost2-184639321",
+			User:         username,
+			Title:        "meuPost2",
+			FileType:     "pdf",
+			HasThumbnail: true,
+			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
+		},
+		{
+			PostId:       "usernam1-meuPost3-184639321",
+			User:         username,
+			Title:        "meuPost3",
+			FileType:     "pdf",
+			HasThumbnail: false,
+			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
 	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
+	expectedThumbnailKey1 := data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
+	expectedKey3 := data[2].User + "/" + data[2].Type + "/" + data[2].PostId + "." + data[2].FileType
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey3)
 
 	getPostRepository.GetPresignedUrlsForDownloading(username)
 }
@@ -72,26 +88,36 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 	username := "username1"
 	data := []*database.Post{
 		{
-			PostId:    "usernam1-meuPost-170948521",
-			User:      username,
-			Title:     "meuPost",
-			FileType:  "png",
-			CreatedAt: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+			PostId:       "usernam1-meuPost-170948521",
+			User:         username,
+			Title:        "meuPost",
+			HasThumbnail: true,
+			FileType:     "png",
+			CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
-			PostId:    "usernam1-meuPost2-184639321",
-			User:      username,
-			Title:     "meuPost2",
-			FileType:  "pdf",
-			CreatedAt: time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
+			PostId:       "usernam1-meuPost2-184639321",
+			User:         username,
+			Title:        "meuPost2",
+			HasThumbnail: true,
+			FileType:     "pdf",
+			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
 	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
-	expectedResult := []string{"url2"}
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
+	expectedResult := []get_post.PostUrl{
+		{
+			PostId:                "usernam1-meuPost2-184639321",
+			PresignedUrl:          "url2",
+			PresignedThumbnailUrl: "thumbnailUrl2",
+		},
+	}
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1).Return("", errors.New("some error"))
-	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0], nil)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0].PresignedUrl, nil)
+	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2).Return(expectedResult[0].PresignedThumbnailUrl, nil)
 
 	result, err := getPostRepository.GetPresignedUrlsForDownloading(username)
 
