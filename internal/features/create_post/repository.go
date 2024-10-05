@@ -25,26 +25,28 @@ type PostKey struct {
 }
 
 type PostMetadata struct {
-	PostId      string    `json:"post_id"`
-	User        string    `json:"username"`
-	Type        string    `json:"type"`
-	FileType    string    `json:"file_type"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	LastUpdated time.Time `json:"last_updated"`
+	PostId       string    `json:"post_id"`
+	User         string    `json:"username"`
+	Type         string    `json:"type"`
+	FileType     string    `json:"file_type"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description"`
+	HasThumbnail bool      `json:"has_thumbnail"`
+	CreatedAt    time.Time `json:"created_at"`
+	LastUpdated  time.Time `json:"last_updated"`
 }
 
 func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	data := &PostMetadata{
-		PostId:      generatePostId(post),
-		User:        post.User,
-		Type:        post.Type,
-		FileType:    post.FileType,
-		Title:       post.Title,
-		Description: post.Description,
-		CreatedAt:   post.CreatedAt,
-		LastUpdated: post.LastUpdated,
+		PostId:       generatePostId(post),
+		User:         post.User,
+		Type:         post.Type,
+		FileType:     post.FileType,
+		Title:        post.Title,
+		Description:  post.Description,
+		HasThumbnail: post.HasThumbnail,
+		CreatedAt:    post.CreatedAt,
+		LastUpdated:  post.LastUpdated,
 	}
 	return r.dataRepository.Client.InsertData("Posts", data)
 }

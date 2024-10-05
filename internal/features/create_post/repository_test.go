@@ -26,22 +26,24 @@ func setUp(t *testing.T) {
 func TestAddNewPostMetaDataInRepository(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
-		User:        "username1",
-		Type:        "Text",
-		Title:       "Meu Post",
-		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		User:         "username1",
+		Type:         "Text",
+		Title:        "Meu Post",
+		Description:  "Este é o meu novo post",
+		HasThumbnail: true,
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	expectedPostId := "username1-Meu_Post-1723153880"
 	data := &create_post.PostMetadata{
-		PostId:      expectedPostId,
-		User:        newPost.User,
-		Type:        newPost.Type,
-		Title:       newPost.Title,
-		Description: newPost.Description,
-		CreatedAt:   newPost.CreatedAt,
-		LastUpdated: newPost.LastUpdated,
+		PostId:       expectedPostId,
+		User:         newPost.User,
+		Type:         newPost.Type,
+		Title:        newPost.Title,
+		Description:  newPost.Description,
+		HasThumbnail: newPost.HasThumbnail,
+		CreatedAt:    newPost.CreatedAt,
+		LastUpdated:  newPost.LastUpdated,
 	}
 	dbClient.EXPECT().InsertData("Posts", data)
 
