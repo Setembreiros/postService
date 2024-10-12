@@ -37,7 +37,6 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 			PostId:       "usernam1-meuPost-170948521",
 			User:         username,
 			Title:        "meuPost",
-			FileType:     "png",
 			HasThumbnail: true,
 			CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
@@ -45,7 +44,6 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 			PostId:       "usernam1-meuPost2-184639321",
 			User:         username,
 			Title:        "meuPost2",
-			FileType:     "pdf",
 			HasThumbnail: true,
 			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
@@ -53,16 +51,15 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 			PostId:       "usernam1-meuPost3-184639321",
 			User:         username,
 			Title:        "meuPost3",
-			FileType:     "pdf",
 			HasThumbnail: false,
 			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
-	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
-	expectedThumbnailKey1 := data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType
-	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
-	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
-	expectedKey3 := data[2].User + "/" + data[2].Type + "/" + data[2].PostId + "." + data[2].FileType
+	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId
+	expectedThumbnailKey1 := data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId
+	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId
+	expectedKey3 := data[2].User + "/" + data[2].Type + "/" + data[2].PostId
 	dataClient.EXPECT().GetPostsByIndexUser(username).Return(data, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey1)
@@ -92,7 +89,6 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 			User:         username,
 			Title:        "meuPost",
 			HasThumbnail: true,
-			FileType:     "png",
 			CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
@@ -100,13 +96,12 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 			User:         username,
 			Title:        "meuPost2",
 			HasThumbnail: true,
-			FileType:     "pdf",
 			CreatedAt:    time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
-	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType
-	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType
-	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType
+	expectedKey1 := data[0].User + "/" + data[0].Type + "/" + data[0].PostId
+	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId
+	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId
 	expectedResult := []get_post.PostUrl{
 		{
 			PostId:                "usernam1-meuPost2-184639321",

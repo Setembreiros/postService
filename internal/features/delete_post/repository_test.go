@@ -38,22 +38,20 @@ func TestDeletePostsWithRepository(t *testing.T) {
 			PostId:    "usernam1-meuPost-170948521",
 			User:      "usernam1",
 			Title:     "meuPost",
-			FileType:  "png",
 			CreatedAt: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
 			PostId:    "usernam1-meuPost2-184639321",
 			User:      "usernam1",
 			Title:     "meuPost2",
-			FileType:  "pdf",
 			CreatedAt: time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
 	expectedKeys := []string{
-		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
-		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
-		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
-		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
+		data[0].User + "/" + data[0].Type + "/" + data[0].PostId,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId,
+		data[1].User + "/" + data[1].Type + "/" + data[1].PostId,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId,
 	}
 	expectedPostKeys := []any{
 		&database.PostKey{
@@ -91,22 +89,20 @@ func TestDeletePostsWithRepository_DeletingObjectsError(t *testing.T) {
 			PostId:    "usernam1-meuPost-170948521",
 			User:      "usernam1",
 			Title:     "meuPost",
-			FileType:  "png",
 			CreatedAt: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
 			PostId:    "usernam1-meuPost2-184639321",
 			User:      "usernam1",
 			Title:     "meuPost2",
-			FileType:  "pdf",
 			CreatedAt: time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
 	expectedKeys := []string{
-		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
-		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
-		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
-		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
+		data[0].User + "/" + data[0].Type + "/" + data[0].PostId,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId,
+		data[1].User + "/" + data[1].Type + "/" + data[1].PostId,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId,
 	}
 	dataClient.EXPECT().GetPostsByIds(postIds).Return(data, nil)
 	objectClient.EXPECT().DeleteObjects(expectedKeys).Return(errors.New("some error"))
@@ -124,22 +120,20 @@ func TestDeletePostsWithRepository_RemovingPostMetadataError(t *testing.T) {
 			PostId:    "usernam1-meuPost-170948521",
 			User:      "usernam1",
 			Title:     "meuPost",
-			FileType:  "png",
 			CreatedAt: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 		},
 		{
 			PostId:    "usernam1-meuPost2-184639321",
 			User:      "usernam1",
 			Title:     "meuPost2",
-			FileType:  "pdf",
 			CreatedAt: time.Date(2024, 7, 24, 20, 51, 20, 33, time.UTC).UTC(),
 		},
 	}
 	expectedKeys := []string{
-		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
-		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
-		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
-		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
+		data[0].User + "/" + data[0].Type + "/" + data[0].PostId,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId,
+		data[1].User + "/" + data[1].Type + "/" + data[1].PostId,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId,
 	}
 	expectedPostKeys := []any{
 		&database.PostKey{
