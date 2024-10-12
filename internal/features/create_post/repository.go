@@ -28,7 +28,6 @@ type PostMetadata struct {
 	PostId       string    `json:"post_id"`
 	User         string    `json:"username"`
 	Type         string    `json:"type"`
-	FileType     string    `json:"file_type"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	HasThumbnail bool      `json:"has_thumbnail"`
@@ -41,7 +40,6 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 		PostId:       generatePostId(post),
 		User:         post.User,
 		Type:         post.Type,
-		FileType:     post.FileType,
 		Title:        post.Title,
 		Description:  post.Description,
 		HasThumbnail: post.HasThumbnail,
@@ -53,14 +51,14 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 
 func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) ([]string, error) {
 	urls := []string{}
-	key := post.User + "/" + post.Type + "/" + generatePostId(post) + "." + post.FileType
+	key := post.User + "/" + post.Type + "/" + generatePostId(post)
 	url, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 	if err != nil {
 		return []string{}, err
 	}
 	urls = append(urls, url)
 	if post.HasThumbnail {
-		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + generatePostId(post) + "." + post.FileType
+		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + generatePostId(post)
 		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(thumbnailKey)
 		if err != nil {
 			return []string{}, err

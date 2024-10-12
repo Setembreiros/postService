@@ -24,7 +24,6 @@ type CreatePostService struct {
 type Post struct {
 	User         string    `json:"username"`
 	Type         string    `json:"type"`
-	FileType     string    `json:"fileType"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	HasThumbnail bool      `json:"hasThumbnail"`

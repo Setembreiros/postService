@@ -42,7 +42,6 @@ func TestCreatePost_HasThumbnailIsTrue(t *testing.T) {
 	newPost := &create_post.Post{
 		User:         "username1",
 		Type:         "Text",
-		FileType:     "jpg",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: true,
@@ -76,7 +75,6 @@ func TestCreatePost_HasThumbnailIsFalse(t *testing.T) {
 	newPost := &create_post.Post{
 		User:         "username1",
 		Type:         "Text",
-		FileType:     "jpg",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: false,

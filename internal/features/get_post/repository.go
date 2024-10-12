@@ -72,7 +72,7 @@ func (r *GetPostRepository) getPostUrl(post *database.Post) (PostUrl, error) {
 }
 
 func (r *GetPostRepository) getPresignedUrl(post *database.Post) (string, error) {
-	key := post.User + "/" + post.Type + "/" + post.PostId + "." + post.FileType
+	key := post.User + "/" + post.Type + "/" + post.PostId
 
 	url, err := r.objectRepository.Client.GetPreSignedUrlForGettingObject(key)
 	if err != nil {
@@ -88,7 +88,7 @@ func (r *GetPostRepository) getPresignedThumbnailUrlIfExists(post *database.Post
 		return ""
 	}
 
-	thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId + "." + post.FileType
+	thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId
 
 	thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForGettingObject(thumbnailKey)
 	if err != nil {
