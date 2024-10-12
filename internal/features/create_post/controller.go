@@ -13,8 +13,9 @@ type CreatePostController struct {
 }
 
 type CreatePostResponse struct {
-	PostId       string `json:"post_id"`
-	PresignedUrl string `json:"presigned_url"`
+	PostId                string `json:"postId"`
+	PresignedUrl          string `json:"presignedUrl"`
+	PresignedThumbnailUrl string `json:"presignedThumbnailUrl"`
 }
 
 func NewCreatePostController(repository Repository, bus *bus.EventBus) *CreatePostController {
@@ -38,16 +39,21 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	postId, presignedUrl, err := controller.service.CreatePost(&post)
+	postId, presignedUrls, err := controller.service.CreatePost(&post)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	api.SendOKWithResult(c, &CreatePostResponse{
+	postResponse := &CreatePostResponse{
 		PostId:       postId,
-		PresignedUrl: presignedUrl,
-	})
+		PresignedUrl: presignedUrls[0],
+	}
+	if post.HasThumbnail {
+		postResponse.PresignedThumbnailUrl = presignedUrls[1]
+	}
+
+	api.SendOKWithResult(c, postResponse)
 }
 
 func (controller *CreatePostController) ConfirmCreatedPost(c *gin.Context) {

@@ -11,6 +11,10 @@ type GetPostController struct {
 	service *GetPostService
 }
 
+type GetPostResponse struct {
+	PostUrls []PostUrl `json:"urlPosts"`
+}
+
 func NewGetPostController(repository Repository) *GetPostController {
 	return &GetPostController{
 		service: NewGetPostService(repository),
@@ -26,11 +30,13 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	id := c.Param("username")
 	username := string(id)
 
-	presignedUrls, err := controller.service.GetUserPosts(username)
+	postUrls, err := controller.service.GetUserPosts(username)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
-	api.SendOKWithResult(c, &presignedUrls)
+	api.SendOKWithResult(c, &GetPostResponse{
+		PostUrls: postUrls,
+	})
 }

@@ -51,7 +51,9 @@ func TestDeletePostsWithRepository(t *testing.T) {
 	}
 	expectedKeys := []string{
 		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
 		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
 	}
 	expectedPostKeys := []any{
 		&database.PostKey{
@@ -102,7 +104,9 @@ func TestDeletePostsWithRepository_DeletingObjectsError(t *testing.T) {
 	}
 	expectedKeys := []string{
 		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
 		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
 	}
 	dataClient.EXPECT().GetPostsByIds(postIds).Return(data, nil)
 	objectClient.EXPECT().DeleteObjects(expectedKeys).Return(errors.New("some error"))
@@ -133,7 +137,9 @@ func TestDeletePostsWithRepository_RemovingPostMetadataError(t *testing.T) {
 	}
 	expectedKeys := []string{
 		data[0].User + "/" + data[0].Type + "/" + data[0].PostId + "." + data[0].FileType,
+		data[0].User + "/" + data[0].Type + "/THUMBNAILS/" + data[0].PostId + "." + data[0].FileType,
 		data[1].User + "/" + data[1].Type + "/" + data[1].PostId + "." + data[1].FileType,
+		data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId + "." + data[1].FileType,
 	}
 	expectedPostKeys := []any{
 		&database.PostKey{
