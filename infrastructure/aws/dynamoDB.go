@@ -252,7 +252,7 @@ func (dc *DynamoDBClient) GetPostsByIds(postIds []string) ([]*database.Post, err
 	return posts, nil
 }
 
-func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post, error) {
+func (dc *DynamoDBClient) GetPostsByIndexUser(username, lastPostId string, limit int) ([]*database.Post, string, error) {
 	input := &dynamodb.QueryInput{
 		TableName:              aws.String("Posts"),
 		IndexName:              aws.String("UserIndex"),
@@ -263,12 +263,20 @@ func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":user": &types.AttributeValueMemberS{Value: username},
 		},
+		Limit: aws.Int32(int32(limit)),
+	}
+
+	if lastPostId != "" {
+		input.ExclusiveStartKey = map[string]types.AttributeValue{
+			"User":   &types.AttributeValueMemberS{Value: username},
+			"PostId": &types.AttributeValueMemberS{Value: lastPostId},
+		}
 	}
 
 	response, err := dc.client.Query(context.TODO(), input)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Couldn't get info about Posts")
-		return nil, err
+		return nil, "", err
 	}
 
 	var results []*database.Post
@@ -278,13 +286,22 @@ func (dc *DynamoDBClient) GetPostsByIndexUser(username string) ([]*database.Post
 		err = attributevalue.UnmarshalMap(item, &result)
 		if err != nil {
 			log.Error().Stack().Err(err).Msg("Couldn't unmarshal response")
-			return nil, err
+			return nil, "", err
 		}
 
 		results = append(results, &result)
 	}
 
-	return results, nil
+	var nextPostId string
+	if response.LastEvaluatedKey != nil {
+		if val, ok := response.LastEvaluatedKey["PostId"]; ok {
+			if postId, ok := val.(*types.AttributeValueMemberS); ok {
+				nextPostId = postId.Value
+			}
+		}
+	}
+
+	return results, nextPostId, nil
 }
 
 func mapTableKeys(keys *[]database.TableAttributes) (*[]types.KeySchemaElement, *[]types.AttributeDefinition, error) {

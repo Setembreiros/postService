@@ -19,24 +19,24 @@ func NewGetPostRepository(dataRepository *database.Database, objectRepository *o
 	}
 }
 
-func (r *GetPostRepository) GetPresignedUrlsForDownloading(username string) ([]PostUrl, error) {
-	posts, err := r.getPostMetadatas(username)
+func (r *GetPostRepository) GetPresignedUrlsForDownloading(username, lastPostId string, limit int) ([]PostUrl, string, error) {
+	posts, nextPostId, err := r.getPostMetadatas(username, lastPostId, limit)
 	if err != nil {
-		return []PostUrl{}, err
+		return []PostUrl{}, "", err
 	}
 
 	postUrls := r.getPostPresignedUrls(posts)
 
-	return postUrls, nil
+	return postUrls, nextPostId, nil
 }
 
-func (r *GetPostRepository) getPostMetadatas(username string) ([]*database.Post, error) {
-	posts, err := r.dataRepository.Client.GetPostsByIndexUser(username)
+func (r *GetPostRepository) getPostMetadatas(username, lastPostId string, limit int) ([]*database.Post, string, error) {
+	posts, nextPostId, err := r.dataRepository.Client.GetPostsByIndexUser(username, lastPostId, limit)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error getting post metadatas for username %s", username)
 	}
 
-	return posts, err
+	return posts, nextPostId, err
 }
 
 func (r *GetPostRepository) getPostPresignedUrls(posts []*database.Post) []PostUrl {
