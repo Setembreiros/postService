@@ -31,7 +31,7 @@ func (controller *GetPostController) Routes(routerGroup *gin.RouterGroup) {
 func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	log.Info().Msg("Handling Request GET UserPosts")
 	username := c.Param("username")
-	lastPostId := c.DefaultQuery("lastPostId", "")
+	lastCreatedAt := c.DefaultQuery("lastCreatedAt", "")
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "6"))
 
 	if err != nil || limit <= 0 {
@@ -39,7 +39,7 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 		return
 	}
 
-	postUrls, nextPostId, err := controller.service.GetUserPosts(username, lastPostId, limit)
+	postUrls, nextPostId, err := controller.service.GetUserPosts(username, lastCreatedAt, limit)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return

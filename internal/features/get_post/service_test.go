@@ -27,7 +27,7 @@ func setUpService(t *testing.T) {
 func TestGetUserPostsWithService(t *testing.T) {
 	setUpService(t)
 	username := "username1"
-	lastPostId := "post"
+	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 3
 	expectedPresignedUrls := []get_post.PostUrl{
 		{
@@ -46,9 +46,9 @@ func TestGetUserPostsWithService(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, limit).Return(expectedPresignedUrls, "post4", nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(expectedPresignedUrls, "post4", nil)
 
-	getPostService.GetUserPosts(username, lastPostId, limit)
+	getPostService.GetUserPosts(username, lastCreatedAt, limit)
 
 	assert.Contains(t, serviceLoggerOutput.String(), username+"'s Pre-Signed Url Posts were generated")
 }
@@ -56,11 +56,11 @@ func TestGetUserPostsWithService(t *testing.T) {
 func TestErrorOnGetUserPostsWithServiceWhenGettingUrls(t *testing.T) {
 	setUpService(t)
 	username := "username1"
-	lastPostId := "post"
+	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 2
-	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, limit).Return(nil, "", errors.New("some error"))
+	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(nil, "", errors.New("some error"))
 
-	getPostService.GetUserPosts(username, lastPostId, limit)
+	getPostService.GetUserPosts(username, lastCreatedAt, limit)
 
 	assert.NotContains(t, serviceLoggerOutput.String(), username+"'s Pre-Signed Url Posts were generated")
 }

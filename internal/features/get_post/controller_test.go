@@ -36,7 +36,7 @@ func setUpHandler(t *testing.T) {
 func TestGetUserPost(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastPostId := "post"
+	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := "4"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -46,7 +46,7 @@ func TestGetUserPost(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastPostId", lastPostId)
+	u.Add("lastCreatedAt", lastCreatedAt)
 	u.Add("limit", limit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedPresignedUrls := []get_post.PostUrl{
@@ -66,7 +66,7 @@ func TestGetUserPost(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, 4).Return(expectedPresignedUrls, "post4", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return(expectedPresignedUrls, "post4", nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -100,9 +100,9 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	expectedDefaultLastPostId := ""
+	expectedDefaultLastCreatedAt := ""
 	expectedDefaultLimit := 6
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastPostId, expectedDefaultLimit).Return(expectedPresignedUrls, "post4", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastCreatedAt, expectedDefaultLimit).Return(expectedPresignedUrls, "post4", nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -118,7 +118,7 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastPostId := "post"
+	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := "4"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -128,11 +128,11 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastPostId", lastPostId)
+	u.Add("lastCreatedAt", lastCreatedAt)
 	u.Add("limit", limit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedError := errors.New("some error")
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, 4).Return([]get_post.PostUrl{}, "", expectedError)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return([]get_post.PostUrl{}, "", expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
@@ -148,7 +148,7 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 func TestBadRequestErrorOnGetUserPosts(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastPostId := "post"
+	lastCreatedAt := "0001-01-03T00:00:00Z"
 	wrongLimit := "0"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -158,7 +158,7 @@ func TestBadRequestErrorOnGetUserPosts(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastPostId", lastPostId)
+	u.Add("lastCreatedAt", lastCreatedAt)
 	u.Add("limit", wrongLimit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedError := "Parámetros de páxinación inválidos"

@@ -7,7 +7,7 @@ import (
 //go:generate mockgen -source=service.go -destination=mock/service.go
 
 type Repository interface {
-	GetPresignedUrlsForDownloading(username, lastPostId string, limit int) ([]PostUrl, string, error)
+	GetPresignedUrlsForDownloading(username, lastCreatedAt string, limit int) ([]PostUrl, string, error)
 }
 
 type GetPostService struct {
@@ -26,8 +26,8 @@ func NewGetPostService(repository Repository) *GetPostService {
 	}
 }
 
-func (s *GetPostService) GetUserPosts(username, lastPostId string, limit int) ([]PostUrl, string, error) {
-	postUrls, nextPostId, err := s.repository.GetPresignedUrlsForDownloading(username, lastPostId, limit)
+func (s *GetPostService) GetUserPosts(username, lastCreatedAt string, limit int) ([]PostUrl, string, error) {
+	postUrls, nextPostId, err := s.repository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
 	if err != nil {
 		return postUrls, nextPostId, err
 	}
