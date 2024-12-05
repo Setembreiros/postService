@@ -15,7 +15,7 @@ type GetPostController struct {
 type GetPostResponse struct {
 	PostUrls          []PostUrl `json:"urlPosts"`
 	Limit             int       `json:"limit"`
-	ThereAreMorePosts bool      `json:"thereAreMorePosts"`
+	NextPostCreatedAt string    `json:"nextPostCreatedAt"`
 }
 
 func NewGetPostController(repository Repository) *GetPostController {
@@ -39,7 +39,7 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 		return
 	}
 
-	postUrls, thereAreMorePosts, err := controller.service.GetUserPosts(username, lastCreatedAt, limit)
+	postUrls, nextPostCreatedAt, err := controller.service.GetUserPosts(username, lastCreatedAt, limit)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
@@ -48,6 +48,6 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	api.SendOKWithResult(c, &GetPostResponse{
 		PostUrls:          postUrls,
 		Limit:             limit,
-		ThereAreMorePosts: thereAreMorePosts,
+		NextPostCreatedAt: nextPostCreatedAt,
 	})
 }

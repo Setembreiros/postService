@@ -93,11 +93,11 @@ func (mr *MockDatabaseClientMockRecorder) GetPostsByIds(postIds interface{}) *go
 }
 
 // GetPostsByIndexUser mocks base method.
-func (m *MockDatabaseClient) GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*database.Post, bool, error) {
+func (m *MockDatabaseClient) GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*database.Post, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPostsByIndexUser", username, lastCreatedAt, limit)
 	ret0, _ := ret[0].([]*database.Post)
-	ret1, _ := ret[1].(bool)
+	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

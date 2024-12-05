@@ -252,7 +252,7 @@ func (dc *DynamoDBClient) GetPostsByIds(postIds []string) ([]*database.Post, err
 	return posts, nil
 }
 
-func (dc *DynamoDBClient) GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*database.Post, bool, error) {
+func (dc *DynamoDBClient) GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*database.Post, string, error) {
 	input := &dynamodb.QueryInput{
 		TableName:              aws.String("Posts"),
 		IndexName:              aws.String("UserIndex"),
@@ -276,7 +276,7 @@ func (dc *DynamoDBClient) GetPostsByIndexUser(username, lastCreatedAt string, li
 	response, err := dc.client.Query(context.TODO(), input)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Couldn't get info about Posts")
-		return nil, false, err
+		return nil, "", err
 	}
 
 	var results []*database.Post
@@ -286,15 +286,22 @@ func (dc *DynamoDBClient) GetPostsByIndexUser(username, lastCreatedAt string, li
 		err = attributevalue.UnmarshalMap(item, &result)
 		if err != nil {
 			log.Error().Stack().Err(err).Msg("Couldn't unmarshal response")
-			return nil, false, err
+			return nil, "", err
 		}
 
 		results = append(results, &result)
 	}
 
-	thereAreMorePosts := response.LastEvaluatedKey != nil
+	var nextPostCreatedAt string
+	if response.LastEvaluatedKey != nil {
+		if val, ok := response.LastEvaluatedKey["CreatedAt"]; ok {
+			if postCreatedAt, ok := val.(*types.AttributeValueMemberS); ok {
+				nextPostCreatedAt = postCreatedAt.Value
+			}
+		}
+	}
 
-	return results, thereAreMorePosts, nil
+	return results, nextPostCreatedAt, nil
 }
 
 func mapTableKeys(keys *[]database.TableAttributes) (*[]types.KeySchemaElement, *[]types.AttributeDefinition, error) {
