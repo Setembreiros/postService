@@ -62,7 +62,7 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId
 	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId
 	expectedKey3 := data[2].User + "/" + data[2].Type + "/" + data[2].PostId
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, "post4", nil)
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, true, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2)
@@ -77,7 +77,7 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingPostMetadat
 	username := "username1"
 	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 3
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(nil, "", errors.New("some error"))
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(nil, false, errors.New("some error"))
 
 	getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
 
@@ -115,17 +115,17 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 			PresignedThumbnailUrl: "thumbnailUrl2",
 		},
 	}
-	expectedNextPostId := "post4"
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, expectedNextPostId, nil)
+	expectedThereAreMorePosts := true
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, expectedThereAreMorePosts, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1).Return("", errors.New("some error"))
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0].PresignedUrl, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2).Return(expectedResult[0].PresignedThumbnailUrl, nil)
 
-	result, nextPostId, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
+	result, thereAreMorePosts, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, expectedResult, result)
-	assert.Equal(t, expectedNextPostId, nextPostId)
+	assert.Equal(t, expectedThereAreMorePosts, thereAreMorePosts)
 	assert.Contains(t, repositoryLoggerOutput.String(), "Error getting presigned URLs for Post "+data[0].PostId)
 }

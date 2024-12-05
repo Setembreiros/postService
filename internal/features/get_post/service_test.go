@@ -46,7 +46,7 @@ func TestGetUserPostsWithService(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(expectedPresignedUrls, "post4", nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(expectedPresignedUrls, true, nil)
 
 	getPostService.GetUserPosts(username, lastCreatedAt, limit)
 
@@ -58,7 +58,7 @@ func TestErrorOnGetUserPostsWithServiceWhenGettingUrls(t *testing.T) {
 	username := "username1"
 	lastCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 2
-	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(nil, "", errors.New("some error"))
+	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, limit).Return(nil, false, errors.New("some error"))
 
 	getPostService.GetUserPosts(username, lastCreatedAt, limit)
 

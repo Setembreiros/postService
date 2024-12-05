@@ -35,11 +35,11 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetPresignedUrlsForDownloading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForDownloading(username, lastCreatedAt string, limit int) ([]get_post.PostUrl, string, error) {
+func (m *MockRepository) GetPresignedUrlsForDownloading(username, lastCreatedAt string, limit int) ([]get_post.PostUrl, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", username, lastCreatedAt, limit)
 	ret0, _ := ret[0].([]get_post.PostUrl)
-	ret1, _ := ret[1].(string)
+	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

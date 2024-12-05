@@ -66,11 +66,11 @@ func TestGetUserPost(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return(expectedPresignedUrls, "post4", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return(expectedPresignedUrls, true, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":4,"nextPostId":"post4"}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":4,"thereAreMorePosts":true}
 	}`
 
 	controller.GetUserPosts(ginContext)
@@ -102,11 +102,11 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 	}
 	expectedDefaultLastCreatedAt := ""
 	expectedDefaultLimit := 6
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastCreatedAt, expectedDefaultLimit).Return(expectedPresignedUrls, "post4", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastCreatedAt, expectedDefaultLimit).Return(expectedPresignedUrls, true, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"nextPostId":"post4"}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"thereAreMorePosts":true}
 	}`
 
 	controller.GetUserPosts(ginContext)
@@ -132,7 +132,7 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	u.Add("limit", limit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedError := errors.New("some error")
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return([]get_post.PostUrl{}, "", expectedError)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return([]get_post.PostUrl{}, false, expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
