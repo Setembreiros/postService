@@ -15,7 +15,8 @@ type GetPostController struct {
 type GetPostResponse struct {
 	PostUrls          []PostUrl `json:"urlPosts"`
 	Limit             int       `json:"limit"`
-	NextPostCreatedAt string    `json:"nextPostCreatedAt"`
+	LastPostId        string    `json:"lastPostId"`
+	LastPostCreatedAt string    `json:"lastPostCreatedAt"`
 }
 
 func NewGetPostController(repository Repository) *GetPostController {
@@ -31,15 +32,21 @@ func (controller *GetPostController) Routes(routerGroup *gin.RouterGroup) {
 func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	log.Info().Msg("Handling Request GET UserPosts")
 	username := c.Param("username")
-	lastCreatedAt := c.DefaultQuery("lastCreatedAt", "")
+	lastPostId := c.DefaultQuery("lastPostId", "")
+	lastPostCreatedAt := c.DefaultQuery("lastPostCreatedAt", "")
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "6"))
 
 	if err != nil || limit <= 0 {
-		api.SendBadRequest(c, "Parámetros de páxinación inválidos")
+		api.SendBadRequest(c, "Invalid pagination parameters, limit has to be greater than 0")
 		return
 	}
 
-	postUrls, nextPostCreatedAt, err := controller.service.GetUserPosts(username, lastCreatedAt, limit)
+	if (lastPostId != "" && lastPostCreatedAt == "") || (lastPostId == "" && lastPostCreatedAt != "") {
+		api.SendBadRequest(c, "Invalid pagination parameters, lastPostId and lastPostCreatedAt both have to have value or both have to be empty")
+		return
+	}
+
+	postUrls, lastPostId, lastPostCreatedAt, err := controller.service.GetUserPosts(username, lastPostId, lastPostCreatedAt, limit)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
@@ -48,6 +55,7 @@ func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	api.SendOKWithResult(c, &GetPostResponse{
 		PostUrls:          postUrls,
 		Limit:             limit,
-		NextPostCreatedAt: nextPostCreatedAt,
+		LastPostId:        lastPostId,
+		LastPostCreatedAt: lastPostCreatedAt,
 	})
 }

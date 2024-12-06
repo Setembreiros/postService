@@ -52,6 +52,9 @@ func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan []string, 1)
 
+	post.CreatedAt = time.Now()
+	post.LastUpdated = post.CreatedAt
+
 	go s.savePostMetaData(post, chError)
 	go s.generetePreSignedUrl(post, chResult, chError)
 

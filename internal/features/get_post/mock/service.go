@@ -35,9 +35,9 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // GetPresignedUrlsForDownloading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForDownloading(username, lastCreatedAt string, limit int) ([]get_post.PostUrl, string, error) {
+func (m *MockRepository) GetPresignedUrlsForDownloading(username, lastPostCreatedAt string, limit int) ([]get_post.PostUrl, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", username, lastCreatedAt, limit)
+	ret := m.ctrl.Call(m, "GetPresignedUrlsForDownloading", username, lastPostCreatedAt, limit)
 	ret0, _ := ret[0].([]get_post.PostUrl)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
@@ -45,7 +45,7 @@ func (m *MockRepository) GetPresignedUrlsForDownloading(username, lastCreatedAt 
 }
 
 // GetPresignedUrlsForDownloading indicates an expected call of GetPresignedUrlsForDownloading.
-func (mr *MockRepositoryMockRecorder) GetPresignedUrlsForDownloading(username, lastCreatedAt, limit interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetPresignedUrlsForDownloading(username, lastPostCreatedAt, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlsForDownloading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlsForDownloading), username, lastCreatedAt, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlsForDownloading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlsForDownloading), username, lastPostCreatedAt, limit)
 }

@@ -19,24 +19,24 @@ func NewGetPostRepository(dataRepository *database.Database, objectRepository *o
 	}
 }
 
-func (r *GetPostRepository) GetPresignedUrlsForDownloading(username, lastCreatedAt string, limit int) ([]PostUrl, string, error) {
-	posts, nextPostCreatedAt, err := r.getPostMetadatas(username, lastCreatedAt, limit)
+func (r *GetPostRepository) GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt string, limit int) ([]PostUrl, string, string, error) {
+	posts, lastPostId, lastPostCreatedAt, err := r.getPostMetadatas(username, lastPostId, lastPostCreatedAt, limit)
 	if err != nil {
-		return []PostUrl{}, "", err
+		return []PostUrl{}, "", "", err
 	}
 
 	postUrls := r.getPostPresignedUrls(posts)
 
-	return postUrls, nextPostCreatedAt, nil
+	return postUrls, lastPostId, lastPostCreatedAt, nil
 }
 
-func (r *GetPostRepository) getPostMetadatas(username, lastCreatedAt string, limit int) ([]*database.Post, string, error) {
-	posts, nextPostCreatedAt, err := r.dataRepository.Client.GetPostsByIndexUser(username, lastCreatedAt, limit)
+func (r *GetPostRepository) getPostMetadatas(username, lastPostId, lastPostCreatedAt string, limit int) ([]*database.Post, string, string, error) {
+	posts, lastPostId, lastPostCreatedAt, err := r.dataRepository.Client.GetPostsByIndexUser(username, lastPostId, lastPostCreatedAt, limit)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error getting post metadatas for username %s", username)
 	}
 
-	return posts, nextPostCreatedAt, err
+	return posts, lastPostId, lastPostCreatedAt, err
 }
 
 func (r *GetPostRepository) getPostPresignedUrls(posts []*database.Post) []PostUrl {

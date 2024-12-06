@@ -93,9 +93,9 @@ func (mr *MockDatabaseClientMockRecorder) GetPostsByIds(postIds interface{}) *go
 }
 
 // GetPostsByIndexUser mocks base method.
-func (m *MockDatabaseClient) GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*database.Post, string, error) {
+func (m *MockDatabaseClient) GetPostsByIndexUser(username, lastPostCreatedAt string, limit int) ([]*database.Post, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPostsByIndexUser", username, lastCreatedAt, limit)
+	ret := m.ctrl.Call(m, "GetPostsByIndexUser", username, lastPostCreatedAt, limit)
 	ret0, _ := ret[0].([]*database.Post)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
@@ -103,9 +103,9 @@ func (m *MockDatabaseClient) GetPostsByIndexUser(username, lastCreatedAt string,
 }
 
 // GetPostsByIndexUser indicates an expected call of GetPostsByIndexUser.
-func (mr *MockDatabaseClientMockRecorder) GetPostsByIndexUser(username, lastCreatedAt, limit interface{}) *gomock.Call {
+func (mr *MockDatabaseClientMockRecorder) GetPostsByIndexUser(username, lastPostCreatedAt, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostsByIndexUser", reflect.TypeOf((*MockDatabaseClient)(nil).GetPostsByIndexUser), username, lastCreatedAt, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostsByIndexUser", reflect.TypeOf((*MockDatabaseClient)(nil).GetPostsByIndexUser), username, lastPostCreatedAt, limit)
 }
 
 // IndexExists mocks base method.

@@ -25,7 +25,7 @@ type DatabaseClient interface {
 	RemoveData(tableName string, key any) error
 	RemoveMultipleData(tableName string, keys []any) error
 	GetPostsByIds(postIds []string) ([]*Post, error)
-	GetPostsByIndexUser(username, lastCreatedAt string, limit int) ([]*Post, string, error)
+	GetPostsByIndexUser(username, lastPostId, lastPostCreatedAt string, limit int) ([]*Post, string, string, error)
 }
 
 func NewDatabase(client DatabaseClient) *Database {

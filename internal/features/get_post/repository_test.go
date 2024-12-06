@@ -32,7 +32,8 @@ func setUp(t *testing.T) {
 func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 	setUp(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 3
 	data := []*database.Post{
 		{
@@ -62,24 +63,25 @@ func TestGetPresignedUrlsForDownloadingInRepository(t *testing.T) {
 	expectedKey2 := data[1].User + "/" + data[1].Type + "/" + data[1].PostId
 	expectedThumbnailKey2 := data[1].User + "/" + data[1].Type + "/THUMBNAILS/" + data[1].PostId
 	expectedKey3 := data[2].User + "/" + data[2].Type + "/" + data[2].PostId
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, "0001-01-06T00:00:00Z", nil)
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastPostId, lastPostCreatedAt, limit).Return(data, "post7", "0001-01-06T00:00:00Z", nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey1)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey3)
 
-	getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
+	getPostRepository.GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit)
 }
 
 func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingPostMetadataByIndexuser(t *testing.T) {
 	setUp(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 3
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(nil, "", errors.New("some error"))
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastPostId, lastPostCreatedAt, limit).Return(nil, "", "", errors.New("some error"))
 
-	getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
+	getPostRepository.GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit)
 
 	assert.Contains(t, repositoryLoggerOutput.String(), "Error getting post metadatas for username "+username)
 }
@@ -87,7 +89,8 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingPostMetadat
 func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *testing.T) {
 	setUp(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 3
 	data := []*database.Post{
 		{
@@ -115,17 +118,19 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 			PresignedThumbnailUrl: "thumbnailUrl2",
 		},
 	}
-	expectedNextPostCreatedAt := "0001-01-06T00:00:00Z"
-	dataClient.EXPECT().GetPostsByIndexUser(username, lastCreatedAt, limit).Return(data, expectedNextPostCreatedAt, nil)
+	expectedLastPostId := "post7"
+	expectedLastPostCreatedAt := "0001-01-06T00:00:00Z"
+	dataClient.EXPECT().GetPostsByIndexUser(username, lastPostId, lastPostCreatedAt, limit).Return(data, expectedLastPostId, expectedLastPostCreatedAt, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey1).Return("", errors.New("some error"))
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0].PresignedUrl, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2).Return(expectedResult[0].PresignedThumbnailUrl, nil)
 
-	result, nextPostCreatedAt, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastCreatedAt, limit)
+	result, lastPostCreatedAt, lastPostCreatedAt, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, expectedResult, result)
-	assert.Equal(t, expectedNextPostCreatedAt, nextPostCreatedAt)
+	assert.Equal(t, expectedLastPostId, lastPostId)
+	assert.Equal(t, expectedLastPostCreatedAt, lastPostCreatedAt)
 	assert.Contains(t, repositoryLoggerOutput.String(), "Error getting presigned URLs for Post "+data[0].PostId)
 }

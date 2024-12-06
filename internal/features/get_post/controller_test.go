@@ -36,7 +36,8 @@ func setUpHandler(t *testing.T) {
 func TestGetUserPost(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := "4"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -46,7 +47,8 @@ func TestGetUserPost(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastCreatedAt", lastCreatedAt)
+	u.Add("lastPostId", lastPostId)
+	u.Add("lastPostCreatedAt", lastPostCreatedAt)
 	u.Add("limit", limit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedPresignedUrls := []get_post.PostUrl{
@@ -66,11 +68,11 @@ func TestGetUserPost(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return(expectedPresignedUrls, "0001-01-06T00:00:00Z", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, 4).Return(expectedPresignedUrls, "post7", "0001-01-06T00:00:00Z", nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":4,"nextPostCreatedAt":"0001-01-06T00:00:00Z"}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":4,"lastPostId":"post7","lastPostCreatedAt":"0001-01-06T00:00:00Z"}
 	}`
 
 	controller.GetUserPosts(ginContext)
@@ -100,13 +102,14 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 			PresignedThumbnailUrl: "thumbnailUrl3",
 		},
 	}
-	expectedDefaultLastCreatedAt := ""
+	expectedDefaultLastPostId := ""
+	expectedDefaultLastPostCreatedAt := ""
 	expectedDefaultLimit := 6
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastCreatedAt, expectedDefaultLimit).Return(expectedPresignedUrls, "0001-01-06T00:00:00Z", nil)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, expectedDefaultLastPostId, expectedDefaultLastPostCreatedAt, expectedDefaultLimit).Return(expectedPresignedUrls, "post7", "0001-01-06T00:00:00Z", nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"nextPostCreatedAt":"0001-01-06T00:00:00Z"}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"expectedDefaultLastPostId":"post7","lastPostCreatedAt":"0001-01-06T00:00:00Z"}
 	}`
 
 	controller.GetUserPosts(ginContext)
@@ -118,7 +121,8 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := "4"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -128,11 +132,12 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastCreatedAt", lastCreatedAt)
+	u.Add("lastPostId", lastPostId)
+	u.Add("lastPostCreatedAt", lastPostCreatedAt)
 	u.Add("limit", limit)
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedError := errors.New("some error")
-	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastCreatedAt, 4).Return([]get_post.PostUrl{}, "", expectedError)
+	controllerRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, 4).Return([]get_post.PostUrl{}, "", "", expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
@@ -145,10 +150,11 @@ func TestInternalServerErrorOnGetUserPosts(t *testing.T) {
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
-func TestBadRequestErrorOnGetUserPosts(t *testing.T) {
+func TestBadRequestErrorOnGetUserPostsWhenLimitSmallerThanZero(t *testing.T) {
 	setUpHandler(t)
 	username := "username1"
-	lastCreatedAt := "0001-01-03T00:00:00Z"
+	lastPostId := "post4"
+	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	wrongLimit := "0"
 	ginContext.Request = &http.Request{
 		Header: make(http.Header),
@@ -158,10 +164,42 @@ func TestBadRequestErrorOnGetUserPosts(t *testing.T) {
 	ginContext.Request.Header.Set("Content-Type", "application/json")
 	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	u := url.Values{}
-	u.Add("lastCreatedAt", lastCreatedAt)
+	u.Add("lastPostId", lastPostId)
+	u.Add("lastPostCreatedAt", lastPostCreatedAt)
 	u.Add("limit", wrongLimit)
 	ginContext.Request.URL.RawQuery = u.Encode()
-	expectedError := "Parámetros de páxinación inválidos"
+	expectedError := "Invalid pagination parameters, limit has to be greater than 0"
+	expectedBodyResponse := `{
+		"error": true,
+		"message": "` + expectedError + `",
+		"content":null
+	}`
+
+	controller.GetUserPosts(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 400)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestBadRequestErrorOnGetUserPostsWhenLastPostIdIsNotEmptyButLastPostCreatedAtIsEmpty(t *testing.T) {
+	setUpHandler(t)
+	username := "username1"
+	lastPostId := "post4"
+	lastPostCreatedAt := ""
+	wrongLimit := "2"
+	ginContext.Request = &http.Request{
+		Header: make(http.Header),
+		URL:    &url.URL{},
+	}
+	ginContext.Request.Method = "GET"
+	ginContext.Request.Header.Set("Content-Type", "application/json")
+	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
+	u := url.Values{}
+	u.Add("lastPostId", lastPostId)
+	u.Add("lastPostCreatedAt", lastPostCreatedAt)
+	u.Add("limit", wrongLimit)
+	ginContext.Request.URL.RawQuery = u.Encode()
+	expectedError := "Invalid pagination parameters, lastPostId and lastPostCreatedAt both have to have value or both have to be empty"
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError + `",
