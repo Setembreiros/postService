@@ -60,7 +60,7 @@ func TestErrorOnGetUserPostsWithServiceWhenGettingUrls(t *testing.T) {
 	lastPostId := "post4"
 	lastPostCreatedAt := "0001-01-03T00:00:00Z"
 	limit := 2
-	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostCreatedAt, limit).Return(nil, "", "", errors.New("some error"))
+	serviceRepository.EXPECT().GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit).Return(nil, "", "", errors.New("some error"))
 
 	getPostService.GetUserPosts(username, lastPostId, lastPostCreatedAt, limit)
 

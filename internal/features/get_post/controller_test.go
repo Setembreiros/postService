@@ -109,7 +109,7 @@ func TestGetUserPostWithDefaultPaginationParameters(t *testing.T) {
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
-		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"expectedDefaultLastPostId":"post7","lastPostCreatedAt":"0001-01-06T00:00:00Z"}
+		"content": {"urlPosts":[{"postId":"post1","url":"url1","thumbnailUrl":"thumbnailUrl1"},{"postId":"post2","url":"url2","thumbnailUrl":"thumbnailUrl2"},{"postId":"post3","url":"url3","thumbnailUrl":"thumbnailUrl3"}],"limit":6,"lastPostId":"post7","lastPostCreatedAt":"0001-01-06T00:00:00Z"}
 	}`
 
 	controller.GetUserPosts(ginContext)

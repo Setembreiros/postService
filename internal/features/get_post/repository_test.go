@@ -125,7 +125,7 @@ func TestErrorOnGetPresignedUrlsForDownloadingInRepositoryWhenGettingUrls(t *tes
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedKey2).Return(expectedResult[0].PresignedUrl, nil)
 	objectClient.EXPECT().GetPreSignedUrlForGettingObject(expectedThumbnailKey2).Return(expectedResult[0].PresignedThumbnailUrl, nil)
 
-	result, lastPostCreatedAt, lastPostCreatedAt, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit)
+	result, lastPostId, lastPostCreatedAt, err := getPostRepository.GetPresignedUrlsForDownloading(username, lastPostId, lastPostCreatedAt, limit)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(result))
