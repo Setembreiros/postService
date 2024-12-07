@@ -3,9 +3,6 @@ package create_post
 import (
 	database "postservice/internal/db"
 	objectstorage "postservice/internal/objectStorage"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type CreatePostRepository struct {
@@ -25,19 +22,19 @@ type PostKey struct {
 }
 
 type PostMetadata struct {
-	PostId       string    `json:"post_id"`
-	User         string    `json:"username"`
-	Type         string    `json:"type"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	HasThumbnail bool      `json:"has_thumbnail"`
-	CreatedAt    time.Time `json:"created_at"`
-	LastUpdated  time.Time `json:"last_updated"`
+	PostId       string `json:"post_id"`
+	User         string `json:"username"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	HasThumbnail bool   `json:"has_thumbnail"`
+	CreatedAt    string `json:"created_at"`
+	LastUpdated  string `json:"last_updated"`
 }
 
 func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	data := &PostMetadata{
-		PostId:       generatePostId(post),
+		PostId:       post.PostId,
 		User:         post.User,
 		Type:         post.Type,
 		Title:        post.Title,
@@ -51,14 +48,15 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 
 func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) ([]string, error) {
 	urls := []string{}
-	key := post.User + "/" + post.Type + "/" + generatePostId(post)
+
+	key := post.User + "/" + post.Type + "/" + post.PostId
 	url, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 	if err != nil {
 		return []string{}, err
 	}
 	urls = append(urls, url)
 	if post.HasThumbnail {
-		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + generatePostId(post)
+		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId
 		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(thumbnailKey)
 		if err != nil {
 			return []string{}, err
@@ -83,9 +81,4 @@ func (r *CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
 		PostId: postId,
 	}
 	return r.dataRepository.Client.RemoveData("Posts", postKey)
-}
-
-func generatePostId(post *Post) string {
-	postId := post.User + "-" + post.Title + "-" + strconv.FormatInt(post.CreatedAt.Unix(), 10)
-	return strings.ReplaceAll(strings.ReplaceAll(postId, " ", "_"), "\t", "_")
 }

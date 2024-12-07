@@ -56,6 +56,7 @@ func (eb *EventBus) Publish(eventName string, eventData any) error {
 	if err != nil {
 		return err
 	}
+
 	return eb.externalBus.Publish(event)
 }
 

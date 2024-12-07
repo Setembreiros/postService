@@ -26,17 +26,17 @@ func setUp(t *testing.T) {
 func TestAddNewPostMetaDataInRepository(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
+		PostId:       "username1-Meu_Post-1723153880",
 		User:         "username1",
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: true,
-		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 	}
-	expectedPostId := "username1-Meu_Post-1723153880"
 	data := &create_post.PostMetadata{
-		PostId:       expectedPostId,
+		PostId:       newPost.PostId,
 		User:         newPost.User,
 		Type:         newPost.Type,
 		Title:        newPost.Title,
@@ -53,13 +53,14 @@ func TestAddNewPostMetaDataInRepository(t *testing.T) {
 func TestGetPresignedUrlsForUploading_HasThumbnailIsTrue(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
+		PostId:       "username1-Meu_Post-1723153880",
 		User:         "username1",
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: true,
-		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 	}
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
 	expectedThumbnailKey := "username1/Text/THUMBNAILS/username1-Meu_Post-1723153880"
@@ -72,13 +73,14 @@ func TestGetPresignedUrlsForUploading_HasThumbnailIsTrue(t *testing.T) {
 func TestGetPresignedUrlsForUploading_HasThumbnailIsFalse(t *testing.T) {
 	setUp(t)
 	newPost := &create_post.Post{
+		PostId:       "username1-Meu_Post-1723153880",
 		User:         "username1",
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: false,
-		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
+		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
+		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 	}
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
 	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)

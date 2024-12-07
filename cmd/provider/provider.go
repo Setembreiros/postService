@@ -49,7 +49,7 @@ func (p *Provider) ProvideApiEndpoint(database *database.Database, objectReposit
 
 func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
-		create_post.NewCreatePostController(create_post.NewCreatePostRepository(database, objectRepository), bus),
+		create_post.NewCreatePostController(create_post.NewCreatePostService(create_post.NewCreatePostRepository(database, objectRepository), bus), bus),
 		get_post.NewGetPostController(get_post.NewGetPostRepository(database, objectRepository)),
 		delete_post.NewDeletePostController(delete_post.NewDeletePostRepository(database, objectRepository), bus),
 	}
