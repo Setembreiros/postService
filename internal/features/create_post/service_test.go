@@ -9,7 +9,6 @@ import (
 	"postservice/internal/features/create_post"
 	mock_create_post "postservice/internal/features/create_post/mock"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog/log"
@@ -39,15 +38,13 @@ func TestCreatePostWithService(t *testing.T) {
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
 		HasThumbnail: true,
-		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
 	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{"https://presigned/url", "https://presignedThumbanail/url"}, nil)
 
 	postId, presignedUrls, err := createPostService.CreatePost(newPost)
 
-	assert.Equal(t, "username1-Meu_Post-1723153880", postId)
+	assert.Contains(t, postId, "username1-Meu_Post-")
 	assert.Equal(t, "https://presigned/url", presignedUrls[0])
 	assert.Equal(t, "https://presignedThumbanail/url", presignedUrls[1])
 	assert.Nil(t, err)
@@ -61,8 +58,6 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 		Title:       "Meu Post",
 		Type:        "Text",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
 	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost)
@@ -87,8 +82,6 @@ func TestConfirmCreatedPostWithServiceWhenIsConfirmed(t *testing.T) {
 		Title:       "Meu Post",
 		Type:        "Text",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	expectedPostWasCreatedEvent := &create_post.PostWasCreatedEvent{
 		PostId:   postId,
@@ -131,8 +124,6 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenSendingEvent(t *testing.T) {
 		Title:       "Meu Post",
 		Type:        "Text",
 		Description: "Este é o meu novo post",
-		CreatedAt:   time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
-		LastUpdated: time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC(),
 	}
 	expectedPostWasCreatedEvent := &create_post.PostWasCreatedEvent{
 		PostId:   postId,

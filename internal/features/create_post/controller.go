@@ -8,8 +8,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=controller.go -destination=mock/controller.go
+
 type CreatePostController struct {
-	service *CreatePostService
+	service Service
 }
 
 type CreatePostResponse struct {
@@ -18,9 +20,14 @@ type CreatePostResponse struct {
 	PresignedThumbnailUrl string `json:"presignedThumbnailUrl"`
 }
 
-func NewCreatePostController(repository Repository, bus *bus.EventBus) *CreatePostController {
+type Service interface {
+	CreatePost(post *Post) (string, []string, error)
+	ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error
+}
+
+func NewCreatePostController(service Service, bus *bus.EventBus) *CreatePostController {
 	return &CreatePostController{
-		service: NewCreatePostService(repository, bus),
+		service: service,
 	}
 }
 

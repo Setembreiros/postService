@@ -2,6 +2,7 @@ package get_post
 
 import (
 	"postservice/internal/api"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -12,7 +13,10 @@ type GetPostController struct {
 }
 
 type GetPostResponse struct {
-	PostUrls []PostUrl `json:"urlPosts"`
+	PostUrls          []PostUrl `json:"urlPosts"`
+	Limit             int       `json:"limit"`
+	LastPostId        string    `json:"lastPostId"`
+	LastPostCreatedAt string    `json:"lastPostCreatedAt"`
 }
 
 func NewGetPostController(repository Repository) *GetPostController {
@@ -27,16 +31,31 @@ func (controller *GetPostController) Routes(routerGroup *gin.RouterGroup) {
 
 func (controller *GetPostController) GetUserPosts(c *gin.Context) {
 	log.Info().Msg("Handling Request GET UserPosts")
-	id := c.Param("username")
-	username := string(id)
+	username := c.Param("username")
+	lastPostId := c.DefaultQuery("lastPostId", "")
+	lastPostCreatedAt := c.DefaultQuery("lastPostCreatedAt", "")
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "6"))
 
-	postUrls, err := controller.service.GetUserPosts(username)
+	if err != nil || limit <= 0 {
+		api.SendBadRequest(c, "Invalid pagination parameters, limit has to be greater than 0")
+		return
+	}
+
+	if (lastPostId != "" && lastPostCreatedAt == "") || (lastPostId == "" && lastPostCreatedAt != "") {
+		api.SendBadRequest(c, "Invalid pagination parameters, lastPostId and lastPostCreatedAt both have to have value or both have to be empty")
+		return
+	}
+
+	postUrls, lastPostId, lastPostCreatedAt, err := controller.service.GetUserPosts(username, lastPostId, lastPostCreatedAt, limit)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	api.SendOKWithResult(c, &GetPostResponse{
-		PostUrls: postUrls,
+		PostUrls:          postUrls,
+		Limit:             limit,
+		LastPostId:        lastPostId,
+		LastPostCreatedAt: lastPostCreatedAt,
 	})
 }

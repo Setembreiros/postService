@@ -2,6 +2,8 @@ package create_post
 
 import (
 	"postservice/internal/bus"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -22,13 +24,14 @@ type CreatePostService struct {
 }
 
 type Post struct {
-	User         string    `json:"username"`
-	Type         string    `json:"type"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	HasThumbnail bool      `json:"hasThumbnail"`
-	CreatedAt    time.Time `json:"createdAt"`
-	LastUpdated  time.Time `json:"lastUpdated"`
+	PostId       string `json:"postId"`
+	User         string `json:"username"`
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	HasThumbnail bool   `json:"hasThumbnail"`
+	CreatedAt    string `json:"createdAt"`
+	LastUpdated  string `json:"lastUpdated"`
 }
 
 type ConfirmedCreatedPost struct {
@@ -48,9 +51,20 @@ func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostS
 	}
 }
 
+var timeLayout string = "2006-01-02T15:04:05.000000000Z"
+
 func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan []string, 1)
+
+	post.CreatedAt = time.Now().UTC().Format(timeLayout)
+	post.LastUpdated = post.CreatedAt
+	postId, err := generatePostId(post)
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Error generating Post Id")
+		return "", []string{}, err
+	}
+	post.PostId = postId
 
 	go s.savePostMetaData(post, chError)
 	go s.generetePreSignedUrl(post, chResult, chError)
@@ -65,7 +79,7 @@ func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
-	return generatePostId(post), result, nil
+	return post.PostId, result, nil
 }
 
 func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error {
@@ -120,6 +134,7 @@ func (s *CreatePostService) publishPostWasCreatedEvent(postId string, metadata *
 		PostId:   postId,
 		Metadata: metadata,
 	}
+
 	err := s.bus.Publish("PostWasCreatedEvent", event)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Publishing PostWasCreatedEvent failed")
@@ -138,4 +153,13 @@ func (s *CreatePostService) rollBackUnconfirmedPost(postId string) error {
 	log.Info().Msgf("Created Post %s failed", postId)
 
 	return nil
+}
+
+func generatePostId(post *Post) (string, error) {
+	parsedCreatedAt, err := time.Parse(timeLayout, post.CreatedAt)
+	if err != nil {
+		return "", err
+	}
+	postId := post.User + "-" + post.Title + "-" + strconv.FormatInt(parsedCreatedAt.Unix(), 10)
+	return strings.ReplaceAll(strings.ReplaceAll(postId, " ", "_"), "\t", "_"), nil
 }
