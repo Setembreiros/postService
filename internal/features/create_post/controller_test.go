@@ -43,20 +43,22 @@ func TestCreatePost_HasThumbnailIsTrue(t *testing.T) {
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
+		Size:         120,
 		HasThumbnail: true,
 	}
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedPostId := "username1-Meu_Post-1723153880"
-	expectedPresignedUrl := "https://presigned/url"
+	expectedPresignedUrl1 := "https://presigned/url1"
+	expectedPresignedUrl2 := "https://presigned/url2"
 	expectedPresignedUrlThumbanil := "https://presigned/url/thumbnail"
-	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl, expectedPresignedUrlThumbanil}, nil)
+	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl1, expectedPresignedUrl2, expectedPresignedUrlThumbanil}, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
 			"postId": "` + expectedPostId + `",
-			"presignedUrl":"` + expectedPresignedUrl + `",
+			"presignedUrls":["` + expectedPresignedUrl1 + `","` + expectedPresignedUrl2 + `"],
 			"presignedThumbnailUrl":"` + expectedPresignedUrlThumbanil + `"
 		}
 	}`
@@ -74,19 +76,21 @@ func TestCreatePost_HasThumbnailIsFalse(t *testing.T) {
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
+		Size:         120,
 		HasThumbnail: false,
 	}
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedPostId := "username1-Meu_Post-1723153880"
-	expectedPresignedUrl := "https://presigned/url"
-	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl}, nil)
+	expectedPresignedUrl1 := "https://presigned/url1"
+	expectedPresignedUrl2 := "https://presigned/url2"
+	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl1, expectedPresignedUrl2}, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
 			"postId": "` + expectedPostId + `",
-			"presignedUrl":"` + expectedPresignedUrl + `",
+			"presignedUrls":["` + expectedPresignedUrl1 + `","` + expectedPresignedUrl2 + `"],
 			"presignedThumbnailUrl":""
 		}
 	}`

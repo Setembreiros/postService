@@ -15,9 +15,9 @@ type CreatePostController struct {
 }
 
 type CreatePostResponse struct {
-	PostId                string `json:"postId"`
-	PresignedUrl          string `json:"presignedUrl"`
-	PresignedThumbnailUrl string `json:"presignedThumbnailUrl"`
+	PostId                string   `json:"postId"`
+	PresignedUrls         []string `json:"presignedUrls"`
+	PresignedThumbnailUrl string   `json:"presignedThumbnailUrl"`
 }
 
 type Service interface {
@@ -53,11 +53,13 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 	}
 
 	postResponse := &CreatePostResponse{
-		PostId:       postId,
-		PresignedUrl: presignedUrls[0],
+		PostId: postId,
 	}
 	if post.HasThumbnail {
-		postResponse.PresignedThumbnailUrl = presignedUrls[1]
+		postResponse.PresignedUrls = presignedUrls[0 : len(presignedUrls)-1]
+		postResponse.PresignedThumbnailUrl = presignedUrls[len(presignedUrls)-1]
+	} else {
+		postResponse.PresignedUrls = presignedUrls
 	}
 
 	api.SendOKWithResult(c, postResponse)
