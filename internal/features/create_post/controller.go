@@ -16,12 +16,13 @@ type CreatePostController struct {
 
 type CreatePostResponse struct {
 	PostId                string   `json:"postId"`
+	UploadId              string   `json:"uploadId"`
 	PresignedUrls         []string `json:"presignedUrls"`
 	PresignedThumbnailUrl string   `json:"presignedThumbnailUrl"`
 }
 
 type Service interface {
-	CreatePost(post *Post) (string, []string, error)
+	CreatePost(post *Post) (CreatePostResult, error)
 	ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error
 }
 
@@ -46,20 +47,21 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	postId, presignedUrls, err := controller.service.CreatePost(&post)
+	postResult, err := controller.service.CreatePost(&post)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	postResponse := &CreatePostResponse{
-		PostId: postId,
+		PostId:   postResult.PostId,
+		UploadId: postResult.UploadId,
 	}
 	if post.HasThumbnail {
-		postResponse.PresignedUrls = presignedUrls[0 : len(presignedUrls)-1]
-		postResponse.PresignedThumbnailUrl = presignedUrls[len(presignedUrls)-1]
+		postResponse.PresignedUrls = postResult.PresignedUrls[0 : len(postResult.PresignedUrls)-1]
+		postResponse.PresignedThumbnailUrl = postResult.PresignedUrls[len(postResult.PresignedUrls)-1]
 	} else {
-		postResponse.PresignedUrls = presignedUrls
+		postResponse.PresignedUrls = postResult.PresignedUrls
 	}
 
 	api.SendOKWithResult(c, postResponse)

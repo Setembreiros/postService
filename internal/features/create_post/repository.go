@@ -76,7 +76,7 @@ func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
 	return &post, err
 }
 
-func (r *CreatePostRepository) CompleteMultipartUpload(multipartPost MultipartPost) error {
+func (r *CreatePostRepository) CompleteMultipartUpload(multipartPost *MultipartPost) error {
 	multipartObject := convertMultipartPostToMultipartObject(multipartPost)
 	return r.objectRepository.Client.CompleteMultipartUpload(multipartObject)
 }
@@ -88,10 +88,10 @@ func (r *CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
 	return r.dataRepository.Client.RemoveData("Posts", postKey)
 }
 
-func convertMultipartPostToMultipartObject(post MultipartPost) objectstorage.MultipartObject {
-	// Convert CompletedPart slice
-	completedParts := make([]objectstorage.CompletedPart, len(post.CompletedPart))
-	for i, part := range post.CompletedPart {
+func convertMultipartPostToMultipartObject(post *MultipartPost) objectstorage.MultipartObject {
+	key := post.Post.User + "/" + post.Post.Type + "/" + post.Post.PostId
+	completedParts := make([]objectstorage.CompletedPart, len(post.CompletedParts))
+	for i, part := range post.CompletedParts {
 		completedParts[i] = objectstorage.CompletedPart{
 			PartNumber: part.PartNumber,
 			ETag:       part.ETag,
@@ -99,7 +99,7 @@ func convertMultipartPostToMultipartObject(post MultipartPost) objectstorage.Mul
 	}
 
 	return objectstorage.MultipartObject{
-		Key:           post.Key,
+		Key:           key,
 		UploadID:      post.UploadID,
 		CompletedPart: completedParts,
 	}

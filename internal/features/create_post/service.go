@@ -15,7 +15,7 @@ type Repository interface {
 	AddNewPostMetaData(data *Post) error
 	GetPresignedUrlsForUploading(data *Post) ([]string, error)
 	GetPostMetadata(postId string) (*Post, error)
-	CompleteMultipartUpload(multipartPost MultipartPost) error
+	CompleteMultipartUpload(multipartPost *MultipartPost) error
 	RemoveUnconfirmedPost(postId string) error
 }
 
@@ -36,17 +36,24 @@ type Post struct {
 	LastUpdated  string `json:"lastUpdated"`
 }
 
+type CreatePostResult struct {
+	PostId        string   `json:"postId"`
+	UploadId      string   `json:"uploadId"`
+	PresignedUrls []string `json:"presignedUrls"`
+}
+
 type ConfirmedCreatedPost struct {
-	IsConfirmed   bool          `json:"isConfirmed"`
-	PostId        string        `json:"postId"`
-	IsMultipart   bool          `json:"isMultipart"`
-	MultipartPost MultipartPost `json:"multipartPost"`
+	IsConfirmed    bool            `json:"isConfirmed"`
+	PostId         string          `json:"postId"`
+	IsMultipart    bool            `json:"isMultipart"`
+	UploadID       string          `json:"uploadID"`
+	CompletedParts []CompletedPart `json:"completedParts"`
 }
 
 type MultipartPost struct {
-	Key           string          `json:"key"`
-	UploadID      string          `json:"uploadID"`
-	CompletedPart []CompletedPart `json:"completedPart"`
+	Post           *Post           `json:"post"`
+	UploadID       string          `json:"uploadID"`
+	CompletedParts []CompletedPart `json:"completedParts"`
 }
 
 type CompletedPart struct {
@@ -68,7 +75,7 @@ func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostS
 
 var timeLayout string = "2006-01-02T15:04:05.000000000Z"
 
-func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
+func (s *CreatePostService) CreatePost(post *Post) (CreatePostResult, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan []string, 1)
 
@@ -77,7 +84,7 @@ func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 	postId, err := generatePostId(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Post Id")
-		return "", []string{}, err
+		return CreatePostResult{}, err
 	}
 	post.PostId = postId
 
@@ -88,13 +95,17 @@ func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 	for i := 0; i < numberOfTasks; i++ {
 		err := <-chError
 		if err != nil {
-			return "", []string{}, err
+			return CreatePostResult{}, err
 		}
 	}
 
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
-	return post.PostId, result, nil
+	return CreatePostResult{
+		PostId:        postId,
+		UploadId:      result[0],
+		PresignedUrls: result[1:],
+	}, nil
 }
 
 func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error {
@@ -107,18 +118,23 @@ func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreated
 		return nil
 	}
 
-	if confirmPostData.IsMultipart {
-		err := s.repository.CompleteMultipartUpload(confirmPostData.MultipartPost)
-		log.Error().Stack().Err(err).Msgf("Error completing multipart Post %s", confirmPostData.PostId)
-		if err != nil {
-			return err
-		}
-	}
-
 	post, err := s.repository.GetPostMetadata(confirmPostData.PostId)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error retrieving Post %s metadata", confirmPostData.PostId)
 		return err
+	}
+
+	if confirmPostData.IsMultipart {
+		multipartPost := &MultipartPost{
+			Post:           post,
+			UploadID:       confirmPostData.UploadID,
+			CompletedParts: confirmPostData.CompletedParts,
+		}
+		err := s.repository.CompleteMultipartUpload(multipartPost)
+		log.Error().Stack().Err(err).Msgf("Error completing multipart Post %s", confirmPostData.PostId)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = s.publishPostWasCreatedEvent(confirmPostData.PostId, post)

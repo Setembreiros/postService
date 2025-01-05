@@ -40,13 +40,14 @@ func TestCreatePostWithService(t *testing.T) {
 		HasThumbnail: true,
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
-	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{"https://presigned/url", "https://presignedThumbanail/url"}, nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{"NoUploadId", "https://presigned/url", "https://presignedThumbanail/url"}, nil)
 
-	postId, presignedUrls, err := createPostService.CreatePost(newPost)
+	result, err := createPostService.CreatePost(newPost)
 
-	assert.Contains(t, postId, "username1-Meu_Post-")
-	assert.Equal(t, "https://presigned/url", presignedUrls[0])
-	assert.Equal(t, "https://presignedThumbanail/url", presignedUrls[1])
+	assert.Contains(t, result.PostId, "username1-Meu_Post-")
+	assert.Contains(t, result.UploadId, "NoUploadId")
+	assert.Equal(t, "https://presigned/url", result.PresignedUrls[0])
+	assert.Equal(t, "https://presignedThumbanail/url", result.PresignedUrls[1])
 	assert.Nil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Post Meu Post was created")
 }
@@ -62,10 +63,11 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(errors.New("some error"))
 	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost)
 
-	postId, presignedUrls, err := createPostService.CreatePost(newPost)
+	result, err := createPostService.CreatePost(newPost)
 
-	assert.Empty(t, postId)
-	assert.Empty(t, presignedUrls)
+	assert.Empty(t, result.PostId)
+	assert.Empty(t, result.UploadId)
+	assert.Empty(t, result.PresignedUrls)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")
 }
@@ -142,10 +144,12 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenSendingEvent(t *testing.T) {
 func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T) {
 	setUpService(t)
 	postId := "postId"
-	multipartPost := create_post.MultipartPost{
-		Key:      "username/text/" + postId,
-		UploadID: "upload-id",
-		CompletedPart: []create_post.CompletedPart{
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: true,
+		PostId:      postId,
+		IsMultipart: true,
+		UploadID:    "upload-id",
+		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,
 				ETag:       "etag1",
@@ -156,25 +160,24 @@ func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T
 			},
 		},
 	}
-	confirmedPost := &create_post.ConfirmedCreatedPost{
-		IsConfirmed:   true,
-		PostId:        postId,
-		IsMultipart:   true,
-		MultipartPost: multipartPost,
-	}
 	postMetadata := &create_post.Post{
 		User:        "username1",
 		Title:       "Meu Post",
 		Type:        "Text",
 		Description: "Este é o meu novo post",
 	}
+	expectedMultipartPost := &create_post.MultipartPost{
+		Post:           postMetadata,
+		UploadID:       confirmedPost.UploadID,
+		CompletedParts: confirmedPost.CompletedParts,
+	}
 	expectedPostWasCreatedEvent := &create_post.PostWasCreatedEvent{
 		PostId:   postId,
 		Metadata: postMetadata,
 	}
 	expectedEvent, _ := createEvent("PostWasCreatedEvent", expectedPostWasCreatedEvent)
-	serviceRepository.EXPECT().CompleteMultipartUpload(multipartPost).Return(nil)
 	serviceRepository.EXPECT().GetPostMetadata(postId).Return(postMetadata, nil)
+	serviceRepository.EXPECT().CompleteMultipartUpload(expectedMultipartPost).Return(nil)
 	serviceExternalBus.EXPECT().Publish(expectedEvent)
 
 	err := createPostService.ConfirmCreatedPost(confirmedPost)
@@ -186,10 +189,12 @@ func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T
 func TestErrorOnConfirmCreatedPostWithServiceWhenCompleteMultipartUpload(t *testing.T) {
 	setUpService(t)
 	postId := "postId"
-	multipartPost := create_post.MultipartPost{
-		Key:      "username/text/" + postId,
-		UploadID: "upload-id",
-		CompletedPart: []create_post.CompletedPart{
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: true,
+		PostId:      postId,
+		IsMultipart: true,
+		UploadID:    "upload-id",
+		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,
 				ETag:       "etag1",
@@ -200,13 +205,19 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenCompleteMultipartUpload(t *test
 			},
 		},
 	}
-	confirmedPost := &create_post.ConfirmedCreatedPost{
-		IsConfirmed:   true,
-		PostId:        postId,
-		IsMultipart:   true,
-		MultipartPost: multipartPost,
+	postMetadata := &create_post.Post{
+		User:        "username1",
+		Title:       "Meu Post",
+		Type:        "Text",
+		Description: "Este é o meu novo post",
 	}
-	serviceRepository.EXPECT().CompleteMultipartUpload(multipartPost).Return(errors.New("some error"))
+	expectedMultipartPost := &create_post.MultipartPost{
+		Post:           postMetadata,
+		UploadID:       confirmedPost.UploadID,
+		CompletedParts: confirmedPost.CompletedParts,
+	}
+	serviceRepository.EXPECT().GetPostMetadata(postId).Return(postMetadata, nil)
+	serviceRepository.EXPECT().CompleteMultipartUpload(expectedMultipartPost).Return(errors.New("some error"))
 
 	err := createPostService.ConfirmCreatedPost(confirmedPost)
 

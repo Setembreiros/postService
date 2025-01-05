@@ -52,12 +52,13 @@ func TestCreatePost_HasThumbnailIsTrue(t *testing.T) {
 	expectedPresignedUrl1 := "https://presigned/url1"
 	expectedPresignedUrl2 := "https://presigned/url2"
 	expectedPresignedUrlThumbanil := "https://presigned/url/thumbnail"
-	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl1, expectedPresignedUrl2, expectedPresignedUrlThumbanil}, nil)
+	controllerService.EXPECT().CreatePost(newPost).Return(create_post.CreatePostResult{expectedPostId, "NoUploadId", []string{expectedPresignedUrl1, expectedPresignedUrl2, expectedPresignedUrlThumbanil}}, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
 			"postId": "` + expectedPostId + `",
+			"uploadId": "NoUploadId",
 			"presignedUrls":["` + expectedPresignedUrl1 + `","` + expectedPresignedUrl2 + `"],
 			"presignedThumbnailUrl":"` + expectedPresignedUrlThumbanil + `"
 		}
@@ -84,12 +85,13 @@ func TestCreatePost_HasThumbnailIsFalse(t *testing.T) {
 	expectedPostId := "username1-Meu_Post-1723153880"
 	expectedPresignedUrl1 := "https://presigned/url1"
 	expectedPresignedUrl2 := "https://presigned/url2"
-	controllerService.EXPECT().CreatePost(newPost).Return(expectedPostId, []string{expectedPresignedUrl1, expectedPresignedUrl2}, nil)
+	controllerService.EXPECT().CreatePost(newPost).Return(create_post.CreatePostResult{expectedPostId, "NoUploadId", []string{expectedPresignedUrl1, expectedPresignedUrl2}}, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": {
 			"postId": "` + expectedPostId + `",
+			"uploadId": "NoUploadId",
 			"presignedUrls":["` + expectedPresignedUrl1 + `","` + expectedPresignedUrl2 + `"],
 			"presignedThumbnailUrl":""
 		}
@@ -112,7 +114,7 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	data, _ := serializeData(newPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPost, "/post", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
-	controllerService.EXPECT().CreatePost(newPost).Return("", []string{}, expectedError)
+	controllerService.EXPECT().CreatePost(newPost).Return(create_post.CreatePostResult{}, expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
@@ -148,10 +150,12 @@ func TestConfirmCreatedPostWhenIsConfirmed(t *testing.T) {
 
 func TestConfirmCreatedPostWhenMultipartIsConfirmed(t *testing.T) {
 	setUpHandler(t)
-	multipartPost := create_post.MultipartPost{
-		Key:      "username/text/postId",
-		UploadID: "upload-id",
-		CompletedPart: []create_post.CompletedPart{
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: true,
+		PostId:      "postId",
+		IsMultipart: true,
+		UploadID:    "upload-id",
+		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,
 				ETag:       "etag1",
@@ -161,12 +165,6 @@ func TestConfirmCreatedPostWhenMultipartIsConfirmed(t *testing.T) {
 				ETag:       "etag2",
 			},
 		},
-	}
-	confirmedPost := &create_post.ConfirmedCreatedPost{
-		IsConfirmed:   true,
-		PostId:        "postId",
-		IsMultipart:   true,
-		MultipartPost: multipartPost,
 	}
 	data, _ := serializeData(confirmedPost)
 	ginContext.Request = httptest.NewRequest(http.MethodPut, "/confirm-created-post", bytes.NewBuffer(data))

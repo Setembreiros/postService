@@ -35,7 +35,7 @@ func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int
 	}
 
 	presignedUrl, err := s3c.getPreSignedUrl(objectKey)
-	return []string{presignedUrl}, err
+	return []string{"NoUploadId", presignedUrl}, err
 }
 
 func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
@@ -125,7 +125,7 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 	log.Info().Msgf("Multipart upload iniciado. UploadID: %s\n", uploadID)
 
 	numParts := int(math.Ceil(float64(size) / 100))
-	presinedUrls := []string{}
+	result := []string{uploadID}
 
 	for part := 1; part <= numParts; part++ {
 		request, err := s3c.presignClient.PresignUploadPart(context.TODO(), &s3.UploadPartInput{
@@ -142,10 +142,10 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 			return []string{}, err
 		}
 
-		presinedUrls = append(presinedUrls, request.URL)
+		result = append(result, request.URL)
 	}
 
-	return presinedUrls, err
+	return result, err
 }
 
 func transformCompletedParts(parts []objectstorage.CompletedPart) []types.CompletedPart {

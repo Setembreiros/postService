@@ -49,7 +49,7 @@ func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(data interface{}) *gomo
 }
 
 // CompleteMultipartUpload mocks base method.
-func (m *MockRepository) CompleteMultipartUpload(multipartPost create_post.MultipartPost) error {
+func (m *MockRepository) CompleteMultipartUpload(multipartPost *create_post.MultipartPost) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CompleteMultipartUpload", multipartPost)
 	ret0, _ := ret[0].(error)
