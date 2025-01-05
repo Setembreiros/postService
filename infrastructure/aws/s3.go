@@ -108,7 +108,7 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 	numParts := int(math.Ceil(float64(size) / 100))
 	presinedUrls := []string{}
 
-	for part := 0; part < numParts; part++ {
+	for part := 1; part <= numParts; part++ {
 		request, err := s3c.presignClient.PresignUploadPart(context.TODO(), &s3.UploadPartInput{
 			Bucket:     aws.String(s3c.bucketName),
 			Key:        aws.String(objectKey),
