@@ -29,6 +29,7 @@ type Post struct {
 	Type         string `json:"type"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
+	Size         int    `json:"size"`
 	HasThumbnail bool   `json:"hasThumbnail"`
 	CreatedAt    string `json:"createdAt"`
 	LastUpdated  string `json:"lastUpdated"`

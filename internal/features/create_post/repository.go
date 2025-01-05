@@ -47,21 +47,21 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 }
 
 func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) ([]string, error) {
-	urls := []string{}
-
 	key := post.User + "/" + post.Type + "/" + post.PostId
-	url, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
+	urls, err := r.objectRepository.Client.GetPreSignedUrlsForPuttingObject(key, post.Size)
+
 	if err != nil {
 		return []string{}, err
 	}
-	urls = append(urls, url)
+
 	if post.HasThumbnail {
 		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId
-		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(thumbnailKey)
+		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlsForPuttingObject(thumbnailKey, 0)
+
 		if err != nil {
 			return []string{}, err
 		}
-		urls = append(urls, thumbnailUrl)
+		urls = append(urls, thumbnailUrl[0])
 	}
 	return urls, nil
 }

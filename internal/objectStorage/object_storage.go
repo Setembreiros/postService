@@ -8,7 +8,7 @@ type ObjectStorage struct {
 }
 
 type ObjectStorageClient interface {
-	GetPreSignedUrlForPuttingObject(objectKey string) (string, error)
+	GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error)
 	GetPreSignedUrlForGettingObject(objectKey string) (string, error)
 	DeleteObjects(objectKeys []string) error
 }

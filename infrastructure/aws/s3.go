@@ -27,18 +27,15 @@ func NewS3Client(config aws.Config, bucketName string) *S3Client {
 	}
 }
 
-func (s3c *S3Client) GetPreSignedUrlForPuttingObject(objectKey string) (string, error) {
-	request, err := s3c.presignClient.PresignPutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(s3c.bucketName),
-		Key:    aws.String(objectKey),
-	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
-	})
-	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
-			s3c.bucketName, objectKey)
+func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error) {
+
+	if size > 100 {
+		return s3c.getMultipartPreSignedUrls(objectKey, size)
 	}
-	return request.URL, err
+
+	presignedUrl, err := s3c.getPreSignedUrl(objectKey)
+
+	return []string{presignedUrl}, err
 }
 
 func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
@@ -78,4 +75,57 @@ func (s3c *S3Client) DeleteObjects(objectKeys []string) error {
 	}
 
 	return nil
+}
+
+func (s3c *S3Client) getPreSignedUrl(objectKey string) (string, error) {
+	request, err := s3c.presignClient.PresignPutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(s3c.bucketName),
+		Key:    aws.String(objectKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
+	})
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
+			s3c.bucketName, objectKey)
+	}
+	return request.URL, err
+}
+
+func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]string, error) {
+	createMultipartUploadInput := &s3.CreateMultipartUploadInput{
+		Bucket: aws.String(s3c.bucketName),
+		Key:    aws.String(objectKey),
+	}
+
+	multipartOutput, err := s3c.client.CreateMultipartUpload(context.TODO(), createMultipartUploadInput)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to initiate multipart upload")
+		return []string{}, err
+	}
+
+	uploadID := *multipartOutput.UploadId
+	log.Info().Msgf("Multipart upload iniciado. UploadID: %s\n", uploadID)
+
+	numParts := int(size / 100)
+	presinedUrls := []string{}
+
+	for part := 0; part < numParts; part++ {
+		request, err := s3c.presignClient.PresignUploadPart(context.TODO(), &s3.UploadPartInput{
+			Bucket:     aws.String(s3c.bucketName),
+			Key:        aws.String(objectKey),
+			PartNumber: aws.Int32(int32(part)),
+			UploadId:   aws.String(uploadID),
+		}, func(opts *s3.PresignOptions) {
+			opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
+		})
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
+				s3c.bucketName, objectKey)
+			return []string{}, err
+		}
+
+		presinedUrls = append(presinedUrls, request.URL)
+	}
+
+	return presinedUrls, err
 }

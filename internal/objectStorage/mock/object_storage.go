@@ -62,17 +62,17 @@ func (mr *MockObjectStorageClientMockRecorder) GetPreSignedUrlForGettingObject(o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreSignedUrlForGettingObject", reflect.TypeOf((*MockObjectStorageClient)(nil).GetPreSignedUrlForGettingObject), objectKey)
 }
 
-// GetPreSignedUrlForPuttingObject mocks base method.
-func (m *MockObjectStorageClient) GetPreSignedUrlForPuttingObject(objectKey string) (string, error) {
+// GetPreSignedUrlsForPuttingObject mocks base method.
+func (m *MockObjectStorageClient) GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPreSignedUrlForPuttingObject", objectKey)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetPreSignedUrlsForPuttingObject", objectKey, size)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPreSignedUrlForPuttingObject indicates an expected call of GetPreSignedUrlForPuttingObject.
-func (mr *MockObjectStorageClientMockRecorder) GetPreSignedUrlForPuttingObject(objectKey interface{}) *gomock.Call {
+// GetPreSignedUrlsForPuttingObject indicates an expected call of GetPreSignedUrlsForPuttingObject.
+func (mr *MockObjectStorageClientMockRecorder) GetPreSignedUrlsForPuttingObject(objectKey, size interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreSignedUrlForPuttingObject", reflect.TypeOf((*MockObjectStorageClient)(nil).GetPreSignedUrlForPuttingObject), objectKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreSignedUrlsForPuttingObject", reflect.TypeOf((*MockObjectStorageClient)(nil).GetPreSignedUrlsForPuttingObject), objectKey, size)
 }
