@@ -48,6 +48,20 @@ func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(data interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewPostMetaData", reflect.TypeOf((*MockRepository)(nil).AddNewPostMetaData), data)
 }
 
+// CompleteMultipartUpload mocks base method.
+func (m *MockRepository) CompleteMultipartUpload(multipartPost create_post.MultipartPost) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteMultipartUpload", multipartPost)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CompleteMultipartUpload indicates an expected call of CompleteMultipartUpload.
+func (mr *MockRepositoryMockRecorder) CompleteMultipartUpload(multipartPost interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteMultipartUpload", reflect.TypeOf((*MockRepository)(nil).CompleteMultipartUpload), multipartPost)
+}
+
 // GetPostMetadata mocks base method.
 func (m *MockRepository) GetPostMetadata(postId string) (*create_post.Post, error) {
 	m.ctrl.T.Helper()

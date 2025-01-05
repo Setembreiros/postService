@@ -139,6 +139,81 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenSendingEvent(t *testing.T) {
 	assert.Contains(t, serviceLoggerOutput.String(), "Publishing PostWasCreatedEvent failed")
 }
 
+func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T) {
+	setUpService(t)
+	postId := "postId"
+	multipartPost := create_post.MultipartPost{
+		Key:      "username/text/" + postId,
+		UploadID: "upload-id",
+		CompletedPart: []create_post.CompletedPart{
+			{
+				PartNumber: 1,
+				ETag:       "etag1",
+			},
+			{
+				PartNumber: 2,
+				ETag:       "etag2",
+			},
+		},
+	}
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed:   true,
+		PostId:        postId,
+		IsMultipart:   true,
+		MultipartPost: multipartPost,
+	}
+	postMetadata := &create_post.Post{
+		User:        "username1",
+		Title:       "Meu Post",
+		Type:        "Text",
+		Description: "Este é o meu novo post",
+	}
+	expectedPostWasCreatedEvent := &create_post.PostWasCreatedEvent{
+		PostId:   postId,
+		Metadata: postMetadata,
+	}
+	expectedEvent, _ := createEvent("PostWasCreatedEvent", expectedPostWasCreatedEvent)
+	serviceRepository.EXPECT().CompleteMultipartUpload(multipartPost).Return(nil)
+	serviceRepository.EXPECT().GetPostMetadata(postId).Return(postMetadata, nil)
+	serviceExternalBus.EXPECT().Publish(expectedEvent)
+
+	err := createPostService.ConfirmCreatedPost(confirmedPost)
+
+	assert.Nil(t, err)
+	assert.Contains(t, serviceLoggerOutput.String(), "Created Post postId was confirmed")
+}
+
+func TestErrorOnConfirmCreatedPostWithServiceWhenCompleteMultipartUpload(t *testing.T) {
+	setUpService(t)
+	postId := "postId"
+	multipartPost := create_post.MultipartPost{
+		Key:      "username/text/" + postId,
+		UploadID: "upload-id",
+		CompletedPart: []create_post.CompletedPart{
+			{
+				PartNumber: 1,
+				ETag:       "etag1",
+			},
+			{
+				PartNumber: 2,
+				ETag:       "etag2",
+			},
+		},
+	}
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed:   true,
+		PostId:        postId,
+		IsMultipart:   true,
+		MultipartPost: multipartPost,
+	}
+	serviceRepository.EXPECT().CompleteMultipartUpload(multipartPost).Return(errors.New("some error"))
+
+	err := createPostService.ConfirmCreatedPost(confirmedPost)
+
+	assert.NotNil(t, err)
+	assert.Contains(t, serviceLoggerOutput.String(), "Error completing multipart Post")
+}
+
 func TestConfirmCreatedPostWithServiceWhenIsNotConfirmed(t *testing.T) {
 	setUpService(t)
 	notConfirmedPost := &create_post.ConfirmedCreatedPost{

@@ -125,6 +125,64 @@ func TestInternalServerErrorOnCreatePost(t *testing.T) {
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
+func TestConfirmCreatedPostWhenIsConfirmed(t *testing.T) {
+	setUpHandler(t)
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed: true,
+		PostId:      "postId",
+	}
+	data, _ := serializeData(confirmedPost)
+	ginContext.Request = httptest.NewRequest(http.MethodPut, "/confirm-created-post", bytes.NewBuffer(data))
+	controllerService.EXPECT().ConfirmCreatedPost(confirmedPost)
+	expectedBodyResponse := `{
+		"error": false,
+		"message": "200 OK",
+		"content": null
+	}`
+
+	controller.ConfirmCreatedPost(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestConfirmCreatedPostWhenMultipartIsConfirmed(t *testing.T) {
+	setUpHandler(t)
+	multipartPost := create_post.MultipartPost{
+		Key:      "username/text/postId",
+		UploadID: "upload-id",
+		CompletedPart: []create_post.CompletedPart{
+			{
+				PartNumber: 1,
+				ETag:       "etag1",
+			},
+			{
+				PartNumber: 2,
+				ETag:       "etag2",
+			},
+		},
+	}
+	confirmedPost := &create_post.ConfirmedCreatedPost{
+		IsConfirmed:   true,
+		PostId:        "postId",
+		IsMultipart:   true,
+		MultipartPost: multipartPost,
+	}
+	data, _ := serializeData(confirmedPost)
+	ginContext.Request = httptest.NewRequest(http.MethodPut, "/confirm-created-post", bytes.NewBuffer(data))
+	controllerService.EXPECT().ConfirmCreatedPost(confirmedPost)
+	expectedBodyResponse := `{
+		"error": false,
+		"message": "200 OK",
+		"content": null
+	}`
+
+	controller.ConfirmCreatedPost(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
 func TestConfirmCreatedPostWhenIsNotConfirmed(t *testing.T) {
 	setUpHandler(t)
 	notConfirmedPost := &create_post.ConfirmedCreatedPost{

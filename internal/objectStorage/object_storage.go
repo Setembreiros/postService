@@ -7,9 +7,21 @@ type ObjectStorage struct {
 	BucketName string
 }
 
+type MultipartObject struct {
+	Key           string          `json:"key"`
+	UploadID      string          `json:"uploadID"`
+	CompletedPart []CompletedPart `json:"completedPart"`
+}
+
+type CompletedPart struct {
+	PartNumber int    `json:"partNumber"`
+	ETag       string `json:"eTag"`
+}
+
 type ObjectStorageClient interface {
 	GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error)
 	GetPreSignedUrlForGettingObject(objectKey string) (string, error)
+	CompleteMultipartUpload(multipartobject MultipartObject) error
 	DeleteObjects(objectKeys []string) error
 }
 

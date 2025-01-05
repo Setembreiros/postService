@@ -5,6 +5,7 @@
 package mock_objectstorage
 
 import (
+	objectstorage "postservice/internal/objectStorage"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -31,6 +32,20 @@ func NewMockObjectStorageClient(ctrl *gomock.Controller) *MockObjectStorageClien
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockObjectStorageClient) EXPECT() *MockObjectStorageClientMockRecorder {
 	return m.recorder
+}
+
+// CompleteMultipartUpload mocks base method.
+func (m *MockObjectStorageClient) CompleteMultipartUpload(multipartobject objectstorage.MultipartObject) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteMultipartUpload", multipartobject)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CompleteMultipartUpload indicates an expected call of CompleteMultipartUpload.
+func (mr *MockObjectStorageClientMockRecorder) CompleteMultipartUpload(multipartobject interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteMultipartUpload", reflect.TypeOf((*MockObjectStorageClient)(nil).CompleteMultipartUpload), multipartobject)
 }
 
 // DeleteObjects mocks base method.

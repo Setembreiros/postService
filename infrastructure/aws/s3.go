@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"math"
+	objectstorage "postservice/internal/objectStorage"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -49,6 +50,24 @@ func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, 
 			s3c.bucketName, objectKey)
 	}
 	return request.URL, err
+}
+
+func (s3c *S3Client) CompleteMultipartUpload(multipartObject objectstorage.MultipartObject) error {
+	completeMultipartInput := &s3.CompleteMultipartUploadInput{
+		Bucket:   aws.String(s3c.bucketName),
+		Key:      aws.String(multipartObject.Key),
+		UploadId: aws.String(multipartObject.UploadID),
+		MultipartUpload: &types.CompletedMultipartUpload{
+			Parts: transformCompletedParts(multipartObject.CompletedPart),
+		},
+	}
+
+	_, err := s3c.client.CompleteMultipartUpload(context.TODO(), completeMultipartInput)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to complete multipart upload")
+	}
+
+	return err
 }
 
 func (s3c *S3Client) DeleteObjects(objectKeys []string) error {
@@ -127,4 +146,18 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 	}
 
 	return presinedUrls, err
+}
+
+func transformCompletedParts(parts []objectstorage.CompletedPart) []types.CompletedPart {
+	// Slice para almacenar o resultado
+	var s3Parts []types.CompletedPart
+
+	for _, part := range parts {
+		s3Parts = append(s3Parts, types.CompletedPart{
+			PartNumber: aws.Int32(int32(part.PartNumber)),
+			ETag:       aws.String(part.ETag),
+		})
+	}
+
+	return s3Parts
 }

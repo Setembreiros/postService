@@ -15,6 +15,7 @@ type Repository interface {
 	AddNewPostMetaData(data *Post) error
 	GetPresignedUrlsForUploading(data *Post) ([]string, error)
 	GetPostMetadata(postId string) (*Post, error)
+	CompleteMultipartUpload(multipartPost MultipartPost) error
 	RemoveUnconfirmedPost(postId string) error
 }
 
@@ -36,8 +37,21 @@ type Post struct {
 }
 
 type ConfirmedCreatedPost struct {
-	IsConfirmed bool   `json:"is_confirmed"`
-	PostId      string `json:"post_id"`
+	IsConfirmed   bool          `json:"isConfirmed"`
+	PostId        string        `json:"postId"`
+	IsMultipart   bool          `json:"isMultipart"`
+	MultipartPost MultipartPost `json:"multipartPost"`
+}
+
+type MultipartPost struct {
+	Key           string          `json:"key"`
+	UploadID      string          `json:"uploadID"`
+	CompletedPart []CompletedPart `json:"completedPart"`
+}
+
+type CompletedPart struct {
+	PartNumber int    `json:"partNumber"`
+	ETag       string `json:"eTag"`
 }
 
 type PostWasCreatedEvent struct {
@@ -91,6 +105,14 @@ func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreated
 		}
 
 		return nil
+	}
+
+	if confirmPostData.IsMultipart {
+		err := s.repository.CompleteMultipartUpload(confirmPostData.MultipartPost)
+		log.Error().Stack().Err(err).Msgf("Error completing multipart Post %s", confirmPostData.PostId)
+		if err != nil {
+			return err
+		}
 	}
 
 	post, err := s.repository.GetPostMetadata(confirmPostData.PostId)
