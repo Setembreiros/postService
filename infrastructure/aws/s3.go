@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,13 +29,11 @@ func NewS3Client(config aws.Config, bucketName string) *S3Client {
 }
 
 func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error) {
-
 	if size > 100 {
 		return s3c.getMultipartPreSignedUrls(objectKey, size)
 	}
 
 	presignedUrl, err := s3c.getPreSignedUrl(objectKey)
-
 	return []string{presignedUrl}, err
 }
 
@@ -106,7 +105,7 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 	uploadID := *multipartOutput.UploadId
 	log.Info().Msgf("Multipart upload iniciado. UploadID: %s\n", uploadID)
 
-	numParts := int(size / 100)
+	numParts := int(math.Ceil(float64(size) / 100))
 	presinedUrls := []string{}
 
 	for part := 0; part < numParts; part++ {
