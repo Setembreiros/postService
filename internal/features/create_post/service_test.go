@@ -148,7 +148,7 @@ func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T
 		IsConfirmed: true,
 		PostId:      postId,
 		IsMultipart: true,
-		UploadID:    "upload-id",
+		UploadId:    "upload-id",
 		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,
@@ -168,7 +168,7 @@ func TestConfirmCreatedPostWithServiceWhenIsConfirmedAndIsMultipart(t *testing.T
 	}
 	expectedMultipartPost := &create_post.MultipartPost{
 		Post:           postMetadata,
-		UploadID:       confirmedPost.UploadID,
+		UploadId:       confirmedPost.UploadId,
 		CompletedParts: confirmedPost.CompletedParts,
 	}
 	expectedPostWasCreatedEvent := &create_post.PostWasCreatedEvent{
@@ -193,7 +193,7 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenCompleteMultipartUpload(t *test
 		IsConfirmed: true,
 		PostId:      postId,
 		IsMultipart: true,
-		UploadID:    "upload-id",
+		UploadId:    "upload-id",
 		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,
@@ -213,7 +213,7 @@ func TestErrorOnConfirmCreatedPostWithServiceWhenCompleteMultipartUpload(t *test
 	}
 	expectedMultipartPost := &create_post.MultipartPost{
 		Post:           postMetadata,
-		UploadID:       confirmedPost.UploadID,
+		UploadId:       confirmedPost.UploadId,
 		CompletedParts: confirmedPost.CompletedParts,
 	}
 	serviceRepository.EXPECT().GetPostMetadata(postId).Return(postMetadata, nil)

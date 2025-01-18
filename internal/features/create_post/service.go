@@ -46,13 +46,13 @@ type ConfirmedCreatedPost struct {
 	IsConfirmed    bool            `json:"isConfirmed"`
 	PostId         string          `json:"postId"`
 	IsMultipart    bool            `json:"isMultipart"`
-	UploadID       string          `json:"uploadID"`
+	UploadId       string          `json:"uploadId"`
 	CompletedParts []CompletedPart `json:"completedParts"`
 }
 
 type MultipartPost struct {
 	Post           *Post           `json:"post"`
-	UploadID       string          `json:"uploadID"`
+	UploadId       string          `json:"uploadId"`
 	CompletedParts []CompletedPart `json:"completedParts"`
 }
 
@@ -127,7 +127,7 @@ func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreated
 	if confirmPostData.IsMultipart {
 		multipartPost := &MultipartPost{
 			Post:           post,
-			UploadID:       confirmPostData.UploadID,
+			UploadId:       confirmPostData.UploadId,
 			CompletedParts: confirmPostData.CompletedParts,
 		}
 		err := s.repository.CompleteMultipartUpload(multipartPost)

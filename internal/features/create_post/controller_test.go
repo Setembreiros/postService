@@ -154,7 +154,7 @@ func TestConfirmCreatedPostWhenMultipartIsConfirmed(t *testing.T) {
 		IsConfirmed: true,
 		PostId:      "postId",
 		IsMultipart: true,
-		UploadID:    "upload-id",
+		UploadId:    "upload-id",
 		CompletedParts: []create_post.CompletedPart{
 			{
 				PartNumber: 1,

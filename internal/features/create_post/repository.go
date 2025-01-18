@@ -100,7 +100,7 @@ func convertMultipartPostToMultipartObject(post *MultipartPost) objectstorage.Mu
 
 	return objectstorage.MultipartObject{
 		Key:           key,
-		UploadID:      post.UploadID,
+		UploadID:      post.UploadId,
 		CompletedPart: completedParts,
 	}
 }
