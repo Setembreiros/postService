@@ -66,7 +66,7 @@ func TestGetPresignedUrlsForUploading_HasThumbnailIsTrue(t *testing.T) {
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
 	expectedThumbnailKey := "username1/Text/THUMBNAILS/username1-Meu_Post-1723153880"
 	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedKey, newPost.Size)
-	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedThumbnailKey, 0).Return([]string{"fakeurl"}, nil)
+	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedThumbnailKey, 0).Return("NoUploadId", []string{"fakeurl"}, nil)
 
 	createPostRepository.GetPresignedUrlsForUploading(newPost)
 }

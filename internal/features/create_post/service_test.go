@@ -40,14 +40,14 @@ func TestCreatePostWithService(t *testing.T) {
 		HasThumbnail: true,
 	}
 	serviceRepository.EXPECT().AddNewPostMetaData(newPost).Return(nil)
-	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return([]string{"NoUploadId", "https://presigned/url", "https://presignedThumbanail/url"}, nil)
+	serviceRepository.EXPECT().GetPresignedUrlsForUploading(newPost).Return(create_post.PresignedUrl{"NoUploadId", []string{"https://presigned/url"}, "https://presignedThumbanail/url"}, nil)
 
 	result, err := createPostService.CreatePost(newPost)
 
 	assert.Contains(t, result.PostId, "username1-Meu_Post-")
-	assert.Contains(t, result.UploadId, "NoUploadId")
-	assert.Equal(t, "https://presigned/url", result.PresignedUrls[0])
-	assert.Equal(t, "https://presignedThumbanail/url", result.PresignedUrls[1])
+	assert.Contains(t, result.PresignedUrl.UploadId, "NoUploadId")
+	assert.Equal(t, "https://presigned/url", result.PresignedUrl.ContentPresignedUrls[0])
+	assert.Equal(t, "https://presignedThumbanail/url", result.PresignedUrl.ThumbanilPresignedUrl)
 	assert.Nil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Post Meu Post was created")
 }
@@ -66,8 +66,9 @@ func TestErrorOnCreatePostWithService(t *testing.T) {
 	result, err := createPostService.CreatePost(newPost)
 
 	assert.Empty(t, result.PostId)
-	assert.Empty(t, result.UploadId)
-	assert.Empty(t, result.PresignedUrls)
+	assert.Empty(t, result.PresignedUrl.UploadId)
+	assert.Empty(t, result.PresignedUrl.ContentPresignedUrls)
+	assert.Empty(t, result.PresignedUrl.ThumbanilPresignedUrl)
 	assert.NotNil(t, err)
 	assert.Contains(t, serviceLoggerOutput.String(), "Error saving Post metadata")
 }

@@ -13,7 +13,7 @@ import (
 
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
-	GetPresignedUrlsForUploading(data *Post) ([]string, error)
+	GetPresignedUrlsForUploading(data *Post) (PresignedUrl, error)
 	GetPostMetadata(postId string) (*Post, error)
 	CompleteMultipartUpload(multipartPost *MultipartPost) error
 	RemoveUnconfirmedPost(postId string) error
@@ -37,9 +37,8 @@ type Post struct {
 }
 
 type CreatePostResult struct {
-	PostId        string   `json:"postId"`
-	UploadId      string   `json:"uploadId"`
-	PresignedUrls []string `json:"presignedUrls"`
+	PostId       string       `json:"postId"`
+	PresignedUrl PresignedUrl `json:"presignedUrl"`
 }
 
 type ConfirmedCreatedPost struct {
@@ -66,6 +65,12 @@ type PostWasCreatedEvent struct {
 	Metadata *Post  `json:"metadata"`
 }
 
+type PresignedUrl struct {
+	UploadId              string   `json:"uploadId"`
+	ContentPresignedUrls  []string `json:"contentPresignedUrls"`
+	ThumbanilPresignedUrl string   `json:"thumbanilPresignedUrl"`
+}
+
 func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostService {
 	return &CreatePostService{
 		repository: repository,
@@ -77,7 +82,7 @@ var timeLayout string = "2006-01-02T15:04:05.000000000Z"
 
 func (s *CreatePostService) CreatePost(post *Post) (CreatePostResult, error) {
 	chError := make(chan error, 2)
-	chResult := make(chan []string, 1)
+	chResult := make(chan PresignedUrl, 1)
 
 	post.CreatedAt = time.Now().UTC().Format(timeLayout)
 	post.LastUpdated = post.CreatedAt
@@ -102,9 +107,8 @@ func (s *CreatePostService) CreatePost(post *Post) (CreatePostResult, error) {
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
 	return CreatePostResult{
-		PostId:        postId,
-		UploadId:      result[0],
-		PresignedUrls: result[1:],
+		PostId:       postId,
+		PresignedUrl: result,
 	}, nil
 }
 
@@ -157,15 +161,15 @@ func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
 	chError <- nil
 }
 
-func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan []string, chError chan<- error) {
-	presignedUrls, err := s.repository.GetPresignedUrlsForUploading(post)
+func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan PresignedUrl, chError chan<- error) {
+	presignedUrl, err := s.repository.GetPresignedUrlsForUploading(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
 		chError <- err
 	}
 
 	chError <- nil
-	chResult <- presignedUrls
+	chResult <- presignedUrl
 }
 
 func (s *CreatePostService) publishPostWasCreatedEvent(postId string, metadata *Post) error {

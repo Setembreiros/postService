@@ -78,10 +78,10 @@ func (mr *MockRepositoryMockRecorder) GetPostMetadata(postId interface{}) *gomoc
 }
 
 // GetPresignedUrlsForUploading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForUploading(data *create_post.Post) ([]string, error) {
+func (m *MockRepository) GetPresignedUrlsForUploading(data *create_post.Post) (create_post.PresignedUrl, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPresignedUrlsForUploading", data)
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].(create_post.PresignedUrl)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

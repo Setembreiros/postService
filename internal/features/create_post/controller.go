@@ -54,14 +54,10 @@ func (controller *CreatePostController) CreatePost(c *gin.Context) {
 	}
 
 	postResponse := &CreatePostResponse{
-		PostId:   postResult.PostId,
-		UploadId: postResult.UploadId,
-	}
-	if post.HasThumbnail {
-		postResponse.PresignedUrls = postResult.PresignedUrls[0 : len(postResult.PresignedUrls)-1]
-		postResponse.PresignedThumbnailUrl = postResult.PresignedUrls[len(postResult.PresignedUrls)-1]
-	} else {
-		postResponse.PresignedUrls = postResult.PresignedUrls
+		PostId:                postResult.PostId,
+		UploadId:              postResult.PresignedUrl.UploadId,
+		PresignedUrls:         postResult.PresignedUrl.ContentPresignedUrls,
+		PresignedThumbnailUrl: postResult.PresignedUrl.ThumbanilPresignedUrl,
 	}
 
 	api.SendOKWithResult(c, postResponse)

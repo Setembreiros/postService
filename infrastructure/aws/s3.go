@@ -29,13 +29,13 @@ func NewS3Client(config aws.Config, bucketName string) *S3Client {
 	}
 }
 
-func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error) {
+func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int) (string, []string, error) {
 	if size > 100 {
 		return s3c.getMultipartPreSignedUrls(objectKey, size)
 	}
 
 	presignedUrl, err := s3c.getPreSignedUrl(objectKey)
-	return []string{"NoUploadId", presignedUrl}, err
+	return "NoUploadId", []string{presignedUrl}, err
 }
 
 func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
@@ -109,7 +109,7 @@ func (s3c *S3Client) getPreSignedUrl(objectKey string) (string, error) {
 	return request.URL, err
 }
 
-func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]string, error) {
+func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) (string, []string, error) {
 	createMultipartUploadInput := &s3.CreateMultipartUploadInput{
 		Bucket: aws.String(s3c.bucketName),
 		Key:    aws.String(objectKey),
@@ -118,14 +118,14 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 	multipartOutput, err := s3c.client.CreateMultipartUpload(context.TODO(), createMultipartUploadInput)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Failed to initiate multipart upload")
-		return []string{}, err
+		return "NoUploadId", []string{}, err
 	}
 
 	uploadID := *multipartOutput.UploadId
 	log.Info().Msgf("Multipart upload iniciado. UploadID: %s\n", uploadID)
 
 	numParts := int(math.Ceil(float64(size) / 100))
-	result := []string{uploadID}
+	result := []string{}
 
 	for part := 1; part <= numParts; part++ {
 		request, err := s3c.presignClient.PresignUploadPart(context.TODO(), &s3.UploadPartInput{
@@ -139,13 +139,13 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) ([]st
 		if err != nil {
 			log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
 				s3c.bucketName, objectKey)
-			return []string{}, err
+			return "NoUploadId", []string{}, err
 		}
 
 		result = append(result, request.URL)
 	}
 
-	return result, err
+	return uploadID, result, nil
 }
 
 func transformCompletedParts(parts []objectstorage.CompletedPart) []types.CompletedPart {

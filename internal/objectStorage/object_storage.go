@@ -19,7 +19,7 @@ type CompletedPart struct {
 }
 
 type ObjectStorageClient interface {
-	GetPreSignedUrlsForPuttingObject(objectKey string, size int) ([]string, error)
+	GetPreSignedUrlsForPuttingObject(objectKey string, size int) (string, []string, error)
 	GetPreSignedUrlForGettingObject(objectKey string) (string, error)
 	CompleteMultipartUpload(multipartobject MultipartObject) error
 	DeleteObjects(objectKeys []string) error
