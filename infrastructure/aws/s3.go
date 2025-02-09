@@ -100,7 +100,7 @@ func (s3c *S3Client) getPreSignedUrl(objectKey string) (string, error) {
 		Bucket: aws.String(s3c.bucketName),
 		Key:    aws.String(objectKey),
 	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
+		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second) * 60 * 10)
 	})
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
@@ -134,7 +134,7 @@ func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) (stri
 			PartNumber: aws.Int32(int32(part)),
 			UploadId:   aws.String(uploadID),
 		}, func(opts *s3.PresignOptions) {
-			opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
+			opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second) * 10)
 		})
 		if err != nil {
 			log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",

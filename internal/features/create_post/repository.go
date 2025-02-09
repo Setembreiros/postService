@@ -27,6 +27,7 @@ type PostMetadata struct {
 	Type         string `json:"type"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
+	Size         int    `json:"size"`
 	HasThumbnail bool   `json:"has_thumbnail"`
 	CreatedAt    string `json:"created_at"`
 	LastUpdated  string `json:"last_updated"`
