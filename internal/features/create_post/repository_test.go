@@ -58,14 +58,15 @@ func TestGetPresignedUrlsForUploading_HasThumbnailIsTrue(t *testing.T) {
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
+		Size:         50,
 		HasThumbnail: true,
 		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 	}
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
 	expectedThumbnailKey := "username1/Text/THUMBNAILS/username1-Meu_Post-1723153880"
-	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
-	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedThumbnailKey)
+	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedKey, newPost.Size)
+	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedThumbnailKey, 0).Return("NoUploadId", []string{"fakeurl"}, nil)
 
 	createPostRepository.GetPresignedUrlsForUploading(newPost)
 }
@@ -78,12 +79,13 @@ func TestGetPresignedUrlsForUploading_HasThumbnailIsFalse(t *testing.T) {
 		Type:         "Text",
 		Title:        "Meu Post",
 		Description:  "Este é o meu novo post",
+		Size:         50,
 		HasThumbnail: false,
 		CreatedAt:    time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 		LastUpdated:  time.Date(2024, 8, 8, 21, 51, 20, 33, time.UTC).UTC().String(),
 	}
 	expectedKey := "username1/Text/username1-Meu_Post-1723153880"
-	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
+	osClient.EXPECT().GetPreSignedUrlsForPuttingObject(expectedKey, newPost.Size)
 
 	createPostRepository.GetPresignedUrlsForUploading(newPost)
 }

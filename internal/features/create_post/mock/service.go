@@ -48,6 +48,20 @@ func (mr *MockRepositoryMockRecorder) AddNewPostMetaData(data interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewPostMetaData", reflect.TypeOf((*MockRepository)(nil).AddNewPostMetaData), data)
 }
 
+// CompleteMultipartUpload mocks base method.
+func (m *MockRepository) CompleteMultipartUpload(multipartPost *create_post.MultipartPost) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CompleteMultipartUpload", multipartPost)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CompleteMultipartUpload indicates an expected call of CompleteMultipartUpload.
+func (mr *MockRepositoryMockRecorder) CompleteMultipartUpload(multipartPost interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteMultipartUpload", reflect.TypeOf((*MockRepository)(nil).CompleteMultipartUpload), multipartPost)
+}
+
 // GetPostMetadata mocks base method.
 func (m *MockRepository) GetPostMetadata(postId string) (*create_post.Post, error) {
 	m.ctrl.T.Helper()
@@ -64,10 +78,10 @@ func (mr *MockRepositoryMockRecorder) GetPostMetadata(postId interface{}) *gomoc
 }
 
 // GetPresignedUrlsForUploading mocks base method.
-func (m *MockRepository) GetPresignedUrlsForUploading(data *create_post.Post) ([]string, error) {
+func (m *MockRepository) GetPresignedUrlsForUploading(data *create_post.Post) (create_post.PresignedUrl, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPresignedUrlsForUploading", data)
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].(create_post.PresignedUrl)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

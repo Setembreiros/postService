@@ -27,6 +27,7 @@ type PostMetadata struct {
 	Type         string `json:"type"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
+	Size         int    `json:"size"`
 	HasThumbnail bool   `json:"has_thumbnail"`
 	CreatedAt    string `json:"created_at"`
 	LastUpdated  string `json:"last_updated"`
@@ -46,24 +47,28 @@ func (r *CreatePostRepository) AddNewPostMetaData(post *Post) error {
 	return r.dataRepository.Client.InsertData("Posts", data)
 }
 
-func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) ([]string, error) {
-	urls := []string{}
-
+func (r *CreatePostRepository) GetPresignedUrlsForUploading(post *Post) (PresignedUrl, error) {
 	key := post.User + "/" + post.Type + "/" + post.PostId
-	url, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
+	var presignedUrl PresignedUrl
+	uploadId, contentPresignedUrls, err := r.objectRepository.Client.GetPreSignedUrlsForPuttingObject(key, post.Size)
+	presignedUrl.UploadId = uploadId
+	presignedUrl.ContentPresignedUrls = contentPresignedUrls
+
 	if err != nil {
-		return []string{}, err
+		return PresignedUrl{}, err
 	}
-	urls = append(urls, url)
+
 	if post.HasThumbnail {
 		thumbnailKey := post.User + "/" + post.Type + "/THUMBNAILS/" + post.PostId
-		thumbnailUrl, err := r.objectRepository.Client.GetPreSignedUrlForPuttingObject(thumbnailKey)
+		_, thumbanilPresignedUrl, err := r.objectRepository.Client.GetPreSignedUrlsForPuttingObject(thumbnailKey, 0)
+
 		if err != nil {
-			return []string{}, err
+			return PresignedUrl{}, err
 		}
-		urls = append(urls, thumbnailUrl)
+
+		presignedUrl.ThumbanilPresignedUrl = thumbanilPresignedUrl[0]
 	}
-	return urls, nil
+	return presignedUrl, nil
 }
 
 func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
@@ -76,9 +81,31 @@ func (r *CreatePostRepository) GetPostMetadata(postId string) (*Post, error) {
 	return &post, err
 }
 
+func (r *CreatePostRepository) CompleteMultipartUpload(multipartPost *MultipartPost) error {
+	multipartObject := convertMultipartPostToMultipartObject(multipartPost)
+	return r.objectRepository.Client.CompleteMultipartUpload(multipartObject)
+}
+
 func (r *CreatePostRepository) RemoveUnconfirmedPost(postId string) error {
 	postKey := &PostKey{
 		PostId: postId,
 	}
 	return r.dataRepository.Client.RemoveData("Posts", postKey)
+}
+
+func convertMultipartPostToMultipartObject(post *MultipartPost) objectstorage.MultipartObject {
+	key := post.Post.User + "/" + post.Post.Type + "/" + post.Post.PostId
+	completedParts := make([]objectstorage.CompletedPart, len(post.CompletedParts))
+	for i, part := range post.CompletedParts {
+		completedParts[i] = objectstorage.CompletedPart{
+			PartNumber: part.PartNumber,
+			ETag:       part.ETag,
+		}
+	}
+
+	return objectstorage.MultipartObject{
+		Key:           key,
+		UploadID:      post.UploadId,
+		CompletedPart: completedParts,
+	}
 }
