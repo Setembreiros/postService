@@ -13,8 +13,9 @@ import (
 
 type Repository interface {
 	AddNewPostMetaData(data *Post) error
-	GetPresignedUrlsForUploading(data *Post) ([]string, error)
+	GetPresignedUrlsForUploading(data *Post) (PresignedUrl, error)
 	GetPostMetadata(postId string) (*Post, error)
+	CompleteMultipartUpload(multipartPost *MultipartPost) error
 	RemoveUnconfirmedPost(postId string) error
 }
 
@@ -29,19 +30,45 @@ type Post struct {
 	Type         string `json:"type"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
+	Size         int    `json:"size"`
 	HasThumbnail bool   `json:"hasThumbnail"`
 	CreatedAt    string `json:"createdAt"`
 	LastUpdated  string `json:"lastUpdated"`
 }
 
+type CreatePostResult struct {
+	PostId       string       `json:"postId"`
+	PresignedUrl PresignedUrl `json:"presignedUrl"`
+}
+
 type ConfirmedCreatedPost struct {
-	IsConfirmed bool   `json:"is_confirmed"`
-	PostId      string `json:"post_id"`
+	IsConfirmed    bool            `json:"isConfirmed"`
+	PostId         string          `json:"postId"`
+	IsMultipart    bool            `json:"isMultipart"`
+	UploadId       string          `json:"uploadId"`
+	CompletedParts []CompletedPart `json:"completedParts"`
+}
+
+type MultipartPost struct {
+	Post           *Post           `json:"post"`
+	UploadId       string          `json:"uploadId"`
+	CompletedParts []CompletedPart `json:"completedParts"`
+}
+
+type CompletedPart struct {
+	PartNumber int    `json:"partNumber"`
+	ETag       string `json:"eTag"`
 }
 
 type PostWasCreatedEvent struct {
 	PostId   string `json:"post_id"`
 	Metadata *Post  `json:"metadata"`
+}
+
+type PresignedUrl struct {
+	UploadId              string   `json:"uploadId"`
+	ContentPresignedUrls  []string `json:"contentPresignedUrls"`
+	ThumbanilPresignedUrl string   `json:"thumbanilPresignedUrl"`
 }
 
 func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostService {
@@ -53,16 +80,16 @@ func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostS
 
 var timeLayout string = "2006-01-02T15:04:05.000000000Z"
 
-func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
+func (s *CreatePostService) CreatePost(post *Post) (CreatePostResult, error) {
 	chError := make(chan error, 2)
-	chResult := make(chan []string, 1)
+	chResult := make(chan PresignedUrl, 1)
 
 	post.CreatedAt = time.Now().UTC().Format(timeLayout)
 	post.LastUpdated = post.CreatedAt
 	postId, err := generatePostId(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Post Id")
-		return "", []string{}, err
+		return CreatePostResult{}, err
 	}
 	post.PostId = postId
 
@@ -73,13 +100,16 @@ func (s *CreatePostService) CreatePost(post *Post) (string, []string, error) {
 	for i := 0; i < numberOfTasks; i++ {
 		err := <-chError
 		if err != nil {
-			return "", []string{}, err
+			return CreatePostResult{}, err
 		}
 	}
 
 	result := <-chResult
 	log.Info().Msgf("Post %s was created", post.Title)
-	return post.PostId, result, nil
+	return CreatePostResult{
+		PostId:       postId,
+		PresignedUrl: result,
+	}, nil
 }
 
 func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreatedPost) error {
@@ -96,6 +126,19 @@ func (s *CreatePostService) ConfirmCreatedPost(confirmPostData *ConfirmedCreated
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error retrieving Post %s metadata", confirmPostData.PostId)
 		return err
+	}
+
+	if confirmPostData.IsMultipart {
+		multipartPost := &MultipartPost{
+			Post:           post,
+			UploadId:       confirmPostData.UploadId,
+			CompletedParts: confirmPostData.CompletedParts,
+		}
+		err := s.repository.CompleteMultipartUpload(multipartPost)
+		log.Error().Stack().Err(err).Msgf("Error completing multipart Post %s", confirmPostData.PostId)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = s.publishPostWasCreatedEvent(confirmPostData.PostId, post)
@@ -118,15 +161,15 @@ func (s *CreatePostService) savePostMetaData(post *Post, chError chan<- error) {
 	chError <- nil
 }
 
-func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan []string, chError chan<- error) {
-	presignedUrls, err := s.repository.GetPresignedUrlsForUploading(post)
+func (s *CreatePostService) generetePreSignedUrl(post *Post, chResult chan PresignedUrl, chError chan<- error) {
+	presignedUrl, err := s.repository.GetPresignedUrlsForUploading(post)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error generating Pre-Signed URL")
 		chError <- err
 	}
 
 	chError <- nil
-	chResult <- presignedUrls
+	chResult <- presignedUrl
 }
 
 func (s *CreatePostService) publishPostWasCreatedEvent(postId string, metadata *Post) error {

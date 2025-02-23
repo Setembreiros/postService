@@ -2,6 +2,8 @@ package aws
 
 import (
 	"context"
+	"math"
+	objectstorage "postservice/internal/objectStorage"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,18 +29,13 @@ func NewS3Client(config aws.Config, bucketName string) *S3Client {
 	}
 }
 
-func (s3c *S3Client) GetPreSignedUrlForPuttingObject(objectKey string) (string, error) {
-	request, err := s3c.presignClient.PresignPutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(s3c.bucketName),
-		Key:    aws.String(objectKey),
-	}, func(opts *s3.PresignOptions) {
-		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second))
-	})
-	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
-			s3c.bucketName, objectKey)
+func (s3c *S3Client) GetPreSignedUrlsForPuttingObject(objectKey string, size int) (string, []string, error) {
+	if size > 100 {
+		return s3c.getMultipartPreSignedUrls(objectKey, size)
 	}
-	return request.URL, err
+
+	presignedUrl, err := s3c.getPreSignedUrl(objectKey)
+	return "NoUploadId", []string{presignedUrl}, err
 }
 
 func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, error) {
@@ -53,6 +50,24 @@ func (s3c *S3Client) GetPreSignedUrlForGettingObject(objectKey string) (string, 
 			s3c.bucketName, objectKey)
 	}
 	return request.URL, err
+}
+
+func (s3c *S3Client) CompleteMultipartUpload(multipartObject objectstorage.MultipartObject) error {
+	completeMultipartInput := &s3.CompleteMultipartUploadInput{
+		Bucket:   aws.String(s3c.bucketName),
+		Key:      aws.String(multipartObject.Key),
+		UploadId: aws.String(multipartObject.UploadID),
+		MultipartUpload: &types.CompletedMultipartUpload{
+			Parts: transformCompletedParts(multipartObject.CompletedPart),
+		},
+	}
+
+	_, err := s3c.client.CompleteMultipartUpload(context.TODO(), completeMultipartInput)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to complete multipart upload")
+	}
+
+	return err
 }
 
 func (s3c *S3Client) DeleteObjects(objectKeys []string) error {
@@ -78,4 +93,71 @@ func (s3c *S3Client) DeleteObjects(objectKeys []string) error {
 	}
 
 	return nil
+}
+
+func (s3c *S3Client) getPreSignedUrl(objectKey string) (string, error) {
+	request, err := s3c.presignClient.PresignPutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(s3c.bucketName),
+		Key:    aws.String(objectKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second) * 60 * 10)
+	})
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
+			s3c.bucketName, objectKey)
+	}
+	return request.URL, err
+}
+
+func (s3c *S3Client) getMultipartPreSignedUrls(objectKey string, size int) (string, []string, error) {
+	createMultipartUploadInput := &s3.CreateMultipartUploadInput{
+		Bucket: aws.String(s3c.bucketName),
+		Key:    aws.String(objectKey),
+	}
+
+	multipartOutput, err := s3c.client.CreateMultipartUpload(context.TODO(), createMultipartUploadInput)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to initiate multipart upload")
+		return "NoUploadId", []string{}, err
+	}
+
+	uploadID := *multipartOutput.UploadId
+	log.Info().Msgf("Multipart upload iniciado. UploadID: %s\n", uploadID)
+
+	numParts := int(math.Ceil(float64(size) / 100))
+	result := []string{}
+
+	for part := 1; part <= numParts; part++ {
+		request, err := s3c.presignClient.PresignUploadPart(context.TODO(), &s3.UploadPartInput{
+			Bucket:     aws.String(s3c.bucketName),
+			Key:        aws.String(objectKey),
+			PartNumber: aws.Int32(int32(part)),
+			UploadId:   aws.String(uploadID),
+		}, func(opts *s3.PresignOptions) {
+			opts.Expires = time.Duration(s3c.presignLifetimeSecs * int64(time.Second) * 10)
+		})
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("Couldn't get a presigned request to put %v:%v.",
+				s3c.bucketName, objectKey)
+			return "NoUploadId", []string{}, err
+		}
+
+		result = append(result, request.URL)
+	}
+
+	return uploadID, result, nil
+}
+
+func transformCompletedParts(parts []objectstorage.CompletedPart) []types.CompletedPart {
+	// Slice para almacenar o resultado
+	var s3Parts []types.CompletedPart
+
+	for _, part := range parts {
+		s3Parts = append(s3Parts, types.CompletedPart{
+			PartNumber: aws.Int32(int32(part.PartNumber)),
+			ETag:       aws.String(part.ETag),
+		})
+	}
+
+	return s3Parts
 }
