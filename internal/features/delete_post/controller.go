@@ -27,9 +27,9 @@ func (controller *DeletePostController) Routes(routerGroup *gin.RouterGroup) {
 
 func (controller *DeletePostController) DeletePosts(c *gin.Context) {
 	log.Info().Msg("Handling Request Delete Posts")
-	postIds := c.QueryArray("post_id")
+	postIds := c.QueryArray("postId")
 	if len(postIds) == 0 {
-		api.SendBadRequest(c, "Missing post_id parameters")
+		api.SendBadRequest(c, "Missing postId parameters")
 		return
 	}
 

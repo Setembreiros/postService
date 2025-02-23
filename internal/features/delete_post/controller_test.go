@@ -42,7 +42,7 @@ func setUpHandler(t *testing.T) {
 
 func TestDeletePosts(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?post_id=1&post_id=2&post_id=3", nil)
+	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(nil)
 	expectedPostsWereDeletedEvent := &delete_post.PostsWereDeletedEvent{
@@ -68,7 +68,7 @@ func TestDeletePosts_MissingPostID(t *testing.T) {
 	ginContext.Request = req
 	expectedBodyResponse := `{
 		"error": true,
-		"message": "Missing post_id parameters",
+		"message": "Missing postId parameters",
 		"content": null
 	}`
 
@@ -80,7 +80,7 @@ func TestDeletePosts_MissingPostID(t *testing.T) {
 
 func TestDeletePosts_NotFound(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?post_id=1&post_id=2&post_id=3", nil)
+	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(database.NewNotFoundError("", "2"))
 	expectedBodyResponse := `{
@@ -97,7 +97,7 @@ func TestDeletePosts_NotFound(t *testing.T) {
 
 func TestDeletePosts_InternalServerError(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?post_id=1&post_id=2&post_id=3", nil)
+	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(errors.New("Some error"))
 	expectedBodyResponse := `{
