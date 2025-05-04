@@ -78,7 +78,7 @@ func NewCreatePostService(repository Repository, bus *bus.EventBus) *CreatePostS
 	}
 }
 
-var timeLayout string = "2006-01-02T15:04:05.000000000Z"
+var timeLayout string = "2006-01-02T15:04:05.000000Z"
 
 func (s *CreatePostService) CreatePost(post *Post) (CreatePostResult, error) {
 	chError := make(chan error, 2)
