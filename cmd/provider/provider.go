@@ -86,7 +86,7 @@ func (p *Provider) ProvideObjectStorage(ctx context.Context) (*objectstorage.Obj
 		return nil, err
 	}
 
-	return objectstorage.NewObjectStorage(awsClients.NewS3Client(cfg, "artis-bucket")), nil
+	return objectstorage.NewObjectStorage(awsClients.NewS3Client(cfg, "artis-bucket-2")), nil
 }
 
 func (p *Provider) kafkaBrokers() []string {
