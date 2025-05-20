@@ -42,11 +42,14 @@ func setUpHandler(t *testing.T) {
 
 func TestDeletePosts(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
+	username := "username1"
+	req, _ := http.NewRequest("DELETE", "/posts/username1?postId=1&postId=2&postId=3", nil)
+	ginContext.Params = []gin.Param{{Key: "username", Value: username}}
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(nil)
 	expectedPostsWereDeletedEvent := &delete_post.PostsWereDeletedEvent{
-		PostIds: []string{"1", "2", "3"},
+		Username: username,
+		PostIds:  []string{"1", "2", "3"},
 	}
 	expectedEvent := createEvent("PostsWereDeletedEvent", expectedPostsWereDeletedEvent)
 	controllerExternalBus.EXPECT().Publish(expectedEvent).Return(nil)
@@ -64,7 +67,7 @@ func TestDeletePosts(t *testing.T) {
 
 func TestDeletePosts_MissingPostID(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts", nil)
+	req, _ := http.NewRequest("DELETE", "/posts/username1", nil)
 	ginContext.Request = req
 	expectedBodyResponse := `{
 		"error": true,
@@ -80,7 +83,7 @@ func TestDeletePosts_MissingPostID(t *testing.T) {
 
 func TestDeletePosts_NotFound(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
+	req, _ := http.NewRequest("DELETE", "/posts/username1?postId=1&postId=2&postId=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(database.NewNotFoundError("", "2"))
 	expectedBodyResponse := `{
@@ -97,7 +100,7 @@ func TestDeletePosts_NotFound(t *testing.T) {
 
 func TestDeletePosts_InternalServerError(t *testing.T) {
 	setUpHandler(t)
-	req, _ := http.NewRequest("DELETE", "/posts?postId=1&postId=2&postId=3", nil)
+	req, _ := http.NewRequest("DELETE", "/posts/username1?postId=1&postId=2&postId=3", nil)
 	ginContext.Request = req
 	controllerRepository.EXPECT().DeletePosts([]string{"1", "2", "3"}).Return(errors.New("Some error"))
 	expectedBodyResponse := `{

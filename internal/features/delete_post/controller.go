@@ -22,18 +22,19 @@ func NewDeletePostController(repository Repository, bus *bus.EventBus) *DeletePo
 }
 
 func (controller *DeletePostController) Routes(routerGroup *gin.RouterGroup) {
-	routerGroup.DELETE("/posts", controller.DeletePosts)
+	routerGroup.DELETE("/posts/:username", controller.DeletePosts)
 }
 
 func (controller *DeletePostController) DeletePosts(c *gin.Context) {
 	log.Info().Msg("Handling Request Delete Posts")
+	username := c.Param("username")
 	postIds := c.QueryArray("postId")
 	if len(postIds) == 0 {
 		api.SendBadRequest(c, "Missing postId parameters")
 		return
 	}
 
-	err := controller.service.DeletePosts(postIds)
+	err := controller.service.DeletePosts(username, postIds)
 	if err != nil {
 		var notFoundError *database.NotFoundError
 		if errors.As(err, &notFoundError) {

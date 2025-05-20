@@ -18,7 +18,8 @@ type DeletePostService struct {
 }
 
 type PostsWereDeletedEvent struct {
-	PostIds []string `json:"post_ids"`
+	Username string   `json:"username"`
+	PostIds  []string `json:"postIds"`
 }
 
 func NewDeletePostService(repository Repository, bus *bus.EventBus) *DeletePostService {
@@ -28,22 +29,23 @@ func NewDeletePostService(repository Repository, bus *bus.EventBus) *DeletePostS
 	}
 }
 
-func (s *DeletePostService) DeletePosts(postIds []string) error {
+func (s *DeletePostService) DeletePosts(username string, postIds []string) error {
 	err := s.repository.DeletePosts(postIds)
 	if err != nil {
 		log.Error().Stack().Err(err).Msgf("Error deleting posts for postIds %v", postIds)
 		return err
 	}
 
-	s.publishPostsWereDeletedEvent(postIds)
+	s.publishPostsWereDeletedEvent(username, postIds)
 
 	log.Info().Msgf("%v were deleted", postIds)
 	return nil
 }
 
-func (s *DeletePostService) publishPostsWereDeletedEvent(postIds []string) error {
+func (s *DeletePostService) publishPostsWereDeletedEvent(username string, postIds []string) error {
 	event := &PostsWereDeletedEvent{
-		PostIds: postIds,
+		Username: username,
+		PostIds:  postIds,
 	}
 	err := s.bus.Publish("PostsWereDeletedEvent", event)
 	if err != nil {

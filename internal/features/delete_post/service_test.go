@@ -33,40 +33,45 @@ func setUpService(t *testing.T) {
 
 func TestDeletePostsWithService(t *testing.T) {
 	setUpService(t)
+	username := "username1"
 	postIds := []string{"1", "2", "3"}
 	serviceRepository.EXPECT().DeletePosts(postIds).Return(nil)
 	expectedPostsWereDeletedEvent := &delete_post.PostsWereDeletedEvent{
-		PostIds: postIds,
+		Username: username,
+		PostIds:  postIds,
 	}
 	expectedEvent := createEvent("PostsWereDeletedEvent", expectedPostsWereDeletedEvent)
 	serviceExternalBus.EXPECT().Publish(expectedEvent)
 
-	deletePostService.DeletePosts(postIds)
+	deletePostService.DeletePosts(username, postIds)
 
 	assert.Contains(t, serviceLoggerOutput.String(), "[1 2 3] were deleted")
 }
 
 func TestDeletePostsWithService_Error(t *testing.T) {
 	setUpService(t)
+	username := "username1"
 	postIds := []string{"1", "2", "3", "4"}
 	serviceRepository.EXPECT().DeletePosts(postIds).Return(errors.New("Some error"))
 
-	deletePostService.DeletePosts(postIds)
+	deletePostService.DeletePosts(username, postIds)
 
 	assert.Contains(t, serviceLoggerOutput.String(), fmt.Sprintf("Error deleting posts for postIds %v", postIds))
 }
 
 func TestDeletePostsWithService_ErrorPublishingEvent(t *testing.T) {
 	setUpService(t)
+	username := "username1"
 	postIds := []string{"1", "2", "3", "4"}
 	serviceRepository.EXPECT().DeletePosts(postIds).Return(nil)
 	expectedPostsWereDeletedEvent := &delete_post.PostsWereDeletedEvent{
-		PostIds: postIds,
+		Username: username,
+		PostIds:  postIds,
 	}
 	expectedEvent := createEvent("PostsWereDeletedEvent", expectedPostsWereDeletedEvent)
 	serviceExternalBus.EXPECT().Publish(expectedEvent).Return(errors.New("some error"))
 
-	deletePostService.DeletePosts(postIds)
+	deletePostService.DeletePosts(username, postIds)
 
 	assert.Contains(t, serviceLoggerOutput.String(), "Publishing PostsWereDeletedEvent failed")
 }
